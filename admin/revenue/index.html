@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elevated Web Solutions Portal — Revenue</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+      <div class="brand">
+        <div class="brand-mark">
+          <img
+            src="../../assets/elevatedlogo.png"
+            alt="Elevated Web Solutions"
+            class="brand-logo"
+            onerror="this.style.display='none'; this.parentElement.classList.add('brand-fallback')"
+          />
+          <span class="brand-fallback-letter">E</span>
+        </div>
+
+        <div class="brand-content">
+          <h2>ELEVATED</h2>
+          <p>WEB SOLUTIONS</p>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav-item" href="../dashboard/index.html"><span>Dashboard</span></a>
+        <a class="nav-item" href="../projects/index.html"><span>Projects</span></a>
+        <a class="nav-item" href="../people/index.html"><span>People</span></a>
+        <a class="nav-item active" href="../revenue/index.html" aria-current="page"><span>Revenue</span></a>
+        <a class="nav-item" href="../messages/index.html"><span>Messages</span></a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" type="button">
+          <span aria-hidden="true">↩</span>
+          Sign out
+        </button>
+      </div>
+    </aside>
+
+    <div class="backdrop" id="backdrop" hidden></div>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar">
+            <span aria-hidden="true">☰</span>
+          </button>
+
+          <div>
+            <p class="eyebrow">Admin Dashboard</p>
+            <h1>Revenue</h1>
+            <p class="subtext">Track project payments, invoices and revenue.</p>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <button class="new-project-btn" id="generateInvoiceBtn" type="button">
+            + Generate Invoice
+          </button>
+
+          <div class="notification-wrap">
+            <button
+              class="icon-btn bell-btn"
+              id="notificationBtn"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-label="Notifications"
+            >
+              <svg class="bell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 01-3.46 0"/>
+              </svg>
+              <span class="badge" id="notificationCount">3</span>
+            </button>
+
+            <div class="notification-dropdown" id="notificationDropdown" hidden>
+              <div class="dropdown-title">Notifications</div>
+              <div class="dropdown-list" id="notificationList"></div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="stats-grid" aria-label="Revenue highlights">
+        <article class="stat-card">
+          <p class="stat-title">Total Revenue</p>
+          <h2>₹1,250,000</h2>
+          <p class="stat-sub">All-time revenue.</p>
+        </article>
+
+        <article class="stat-card">
+          <p class="stat-title">Collected Revenue</p>
+          <h2>₹850,000</h2>
+          <p class="stat-sub">Already paid.</p>
+        </article>
+
+        <article class="stat-card">
+          <p class="stat-title">Pending Revenue</p>
+          <h2>₹400,000</h2>
+          <p class="stat-sub">Awaiting payment.</p>
+        </article>
+
+        <article class="stat-card">
+          <p class="stat-title">Outstanding Invoices</p>
+          <h2 id="outstandingInvoicesCount">5</h2>
+          <p class="stat-sub">Pending invoices.</p>
+        </article>
+      </section>
+
+      <section class="panel panel-full">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">Revenue Trend</p>
+            <h3>Collected Revenue</h3>
+          </div>
+          <div class="panel-chip">Monthly graph</div>
+        </div>
+
+        <div class="chart-shell">
+          <div class="chart-legend">
+            <span class="legend-dot"></span>
+            <span>Collected Revenue Only</span>
+          </div>
+
+          <div class="chart-wrap" aria-label="Revenue trend chart">
+            <svg id="revenueChart" viewBox="0 0 1000 420" role="img" aria-label="Collected revenue monthly graph">
+              <defs>
+                <linearGradient id="areaGradient" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="rgba(255,120,62,0.35)"/>
+                  <stop offset="100%" stop-color="rgba(255,120,62,0.02)"/>
+                </linearGradient>
+              </defs>
+              <g id="chartGrid"></g>
+              <path id="chartArea" d=""></path>
+              <path id="chartLine" d=""></path>
+              <g id="chartDots"></g>
+              <g id="chartLabels"></g>
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel-full">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">Projects</p>
+            <h3>Project Revenue</h3>
+          </div>
+          <div class="panel-chip" id="collectionRateChip">60% paid</div>
+        </div>
+
+        <div class="project-revenue-list" id="projectRevenueList"></div>
+      </section>
+
+      <section class="panel panel-full invoices-panel">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">Invoices</p>
+            <h3>Invoices</h3>
+          </div>
+        </div>
+
+        <div class="invoice-toolbar">
+          <label class="search-wrap" aria-label="Search invoices">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input id="invoiceSearch" type="search" placeholder="Search by invoice ID, project name, client name" />
+          </label>
+
+          <div class="filter-group" role="tablist" aria-label="Invoice filters">
+            <button class="filter-btn active" data-filter="All" type="button">All</button>
+            <button class="filter-btn" data-filter="Paid" type="button">Paid</button>
+            <button class="filter-btn" data-filter="Pending" type="button">Pending</button>
+            <button class="filter-btn" data-filter="Overdue" type="button">Overdue</button>
+          </div>
+        </div>
+
+        <div class="invoice-empty" id="invoiceEmpty" hidden>
+          <h4>No invoices yet.</h4>
+          <p>Generate your first invoice.</p>
+        </div>
+
+        <div class="invoice-table-shell">
+          <div class="invoice-table desktop-table" id="invoiceTable" aria-label="Invoice table"></div>
+          <div class="invoice-cards" id="invoiceCards" aria-label="Invoice cards"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop" hidden></div>
+
+  <section class="modal" id="invoiceViewModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <p class="section-kicker">Invoice Details</p>
+          <h3 id="viewModalTitle">INV-EWS001-01</h3>
+        </div>
+        <button class="icon-btn close-btn" data-close-modal type="button" aria-label="Close modal">✕</button>
+      </div>
+
+      <div class="modal-grid" id="viewModalBody"></div>
+      <div class="modal-notes" id="viewModalNotesWrap" hidden>
+        <p class="modal-notes-title">Invoice Notes</p>
+        <p id="viewModalNotes"></p>
+      </div>
+
+      <div class="modal-actions">
+        <button class="ghost-btn" data-close-modal type="button">Close</button>
+        <button class="primary-btn" id="markPaidFromModal" type="button">Mark Paid</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="modal" id="generateInvoiceModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card modal-card-wide">
+      <div class="modal-head">
+        <div>
+          <p class="section-kicker">Create Invoice</p>
+          <h3>Generate Invoice</h3>
+        </div>
+        <button class="icon-btn close-btn" data-close-modal type="button" aria-label="Close modal">✕</button>
+      </div>
+
+      <form id="generateInvoiceForm" class="form-grid">
+        <label>
+          <span>Project</span>
+          <select id="invoiceProject"></select>
+        </label>
+
+        <label>
+          <span>Invoice Type</span>
+          <select id="invoiceType">
+            <option value="50% Advance">50% Advance</option>
+            <option value="30% Approval Payment">30% Approval Payment</option>
+            <option value="20% Final Hosting Payment">20% Final Hosting Payment</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Amount</span>
+          <input id="invoiceAmount" type="number" min="0" step="1000" placeholder="₹0" />
+        </label>
+
+        <label>
+          <span>Due Date</span>
+          <input id="invoiceDueDate" type="date" />
+        </label>
+
+        <label class="full-width">
+          <span>Notes</span>
+          <textarea id="invoiceNotes" rows="4" placeholder="Optional invoice notes..."></textarea>
+        </label>
+
+        <div class="modal-actions full-width">
+          <button class="ghost-btn" data-close-modal type="button">Cancel</button>
+          <button class="primary-btn" type="submit">Generate</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
