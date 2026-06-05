@@ -4,7 +4,6 @@ const conversations = [
   {
     id: 1,
     type: 'project',
-    filter: 'projects',
     name: 'Luxury Villa Website',
     projectName: 'Luxury Villa Website',
     participants: ['ABC Builders', 'Rahul', 'Akash'],
@@ -40,7 +39,6 @@ const conversations = [
   {
     id: 2,
     type: 'project',
-    filter: 'projects',
     name: 'Restaurant Website',
     projectName: 'Restaurant Website',
     participants: ['XYZ Foods', 'Akash'],
@@ -69,7 +67,6 @@ const conversations = [
   {
     id: 3,
     type: 'project',
-    filter: 'projects',
     name: 'Ecommerce Store',
     projectName: 'Ecommerce Store',
     participants: ['Nova Retail', 'Rahul', 'Sam'],
@@ -98,7 +95,6 @@ const conversations = [
   {
     id: 4,
     type: 'client',
-    filter: 'clients',
     name: 'ABC Builders',
     projectName: 'Client Conversation',
     participants: ['ABC Builders', 'Admin'],
@@ -127,7 +123,6 @@ const conversations = [
   {
     id: 5,
     type: 'client',
-    filter: 'clients',
     name: 'Prime Dentals',
     projectName: 'SEO Campaign',
     participants: ['Prime Dentals', 'Admin'],
@@ -156,7 +151,6 @@ const conversations = [
   {
     id: 6,
     type: 'team',
-    filter: 'team',
     name: 'Rahul',
     projectName: 'Internal Team',
     participants: ['Admin', 'Rahul'],
@@ -185,7 +179,6 @@ const conversations = [
   {
     id: 7,
     type: 'team',
-    filter: 'team',
     name: 'Akash',
     projectName: 'Internal Team',
     participants: ['Admin', 'Akash'],
@@ -214,7 +207,6 @@ const conversations = [
   {
     id: 8,
     type: 'client',
-    filter: 'clients',
     name: 'Nova Retail',
     projectName: 'Ecommerce Store',
     participants: ['Nova Retail', 'Admin'],
@@ -246,8 +238,7 @@ const state = {
   filter: 'all',
   search: '',
   activeId: null,
-  pendingAttachments: [],
-  mobileListVisible: true
+  pendingAttachments: []
 };
 
 const els = {
@@ -285,10 +276,10 @@ function formatType(type) {
 }
 
 function initials(name) {
-  const cleaned = String(name).trim().split(/\s+/);
-  if (!cleaned.length) return 'M';
-  if (cleaned.length === 1) return cleaned[0].slice(0, 2).toUpperCase();
-  return (cleaned[0][0] + cleaned[1][0]).toUpperCase();
+  const parts = String(name).trim().split(/\s+/);
+  if (!parts.length) return 'M';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
 function filterLabel(filter) {
@@ -302,16 +293,16 @@ function filterLabel(filter) {
   }[filter] || 'All';
 }
 
-function updateVisibility() {
-  const activeVisible = window.innerWidth > 920 || state.mobileListVisible;
-  els.conversationView.classList.toggle('hidden', !activeVisible);
-  els.chatView.classList.toggle('hidden', activeVisible);
-  els.backToListTop.hidden = activeVisible;
+function showConversationList() {
+  els.conversationView.classList.remove('hidden');
+  els.chatView.classList.add('hidden');
+  els.backToListTop.hidden = true;
 }
 
-function setMobileListVisible(value) {
-  state.mobileListVisible = value;
-  updateVisibility();
+function showChatView() {
+  els.conversationView.classList.add('hidden');
+  els.chatView.classList.remove('hidden');
+  els.backToListTop.hidden = false;
 }
 
 function getFilteredConversations() {
@@ -471,12 +462,7 @@ function openConversation(id, { markRead = false } = {}) {
 
   renderMessages(conv);
   renderConversationList();
-  setMobileListVisible(false);
-}
-
-function openConversationList() {
-  state.activeId = state.activeId;
-  setMobileListVisible(true);
+  showChatView();
 }
 
 function toggleArchive() {
@@ -492,9 +478,7 @@ function toggleArchive() {
     els.chatBadge.textContent = 'Project Chat';
     els.chatParticipants.textContent = 'Choose a conversation from the left to begin messaging.';
     els.messagesArea.innerHTML = '';
-    els.chatView.classList.add('hidden');
-    els.conversationView.classList.remove('hidden');
-    state.mobileListVisible = true;
+    showConversationList();
   } else {
     openConversation(conv.id, { markRead: false });
   }
@@ -542,14 +526,12 @@ function sendMessage() {
 function applyFilter(filter) {
   state.filter = filter;
   els.activeFilterLabel.textContent = filterLabel(filter);
+
   [...els.filterBar.querySelectorAll('.filter-pill')].forEach(btn => {
     btn.classList.toggle('active', btn.dataset.filter === filter);
   });
-  renderConversationList();
-}
 
-function isMobile() {
-  return window.innerWidth <= 920;
+  renderConversationList();
 }
 
 els.filterBar.addEventListener('click', (event) => {
@@ -563,14 +545,8 @@ els.searchInput.addEventListener('input', (event) => {
   renderConversationList();
 });
 
-els.backBtn.addEventListener('click', () => {
-  setMobileListVisible(true);
-});
-
-els.backToListTop.addEventListener('click', () => {
-  setMobileListVisible(true);
-});
-
+els.backBtn.addEventListener('click', showConversationList);
+els.backToListTop.addEventListener('click', showConversationList);
 els.archiveBtn.addEventListener('click', toggleArchive);
 
 els.fileInput.addEventListener('change', (event) => {
@@ -622,41 +598,10 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-window.addEventListener('resize', () => {
-  if (!isMobile()) {
-    state.mobileListVisible = true;
-    els.chatView.classList.remove('hidden');
-    els.conversationView.classList.remove('hidden');
-    els.backToListTop.hidden = true;
-  } else {
-    if (state.activeId) {
-      setMobileListVisible(false);
-    } else {
-      setMobileListVisible(true);
-    }
-  }
-});
-
 function init() {
   renderConversationList();
   applyFilter('all');
-  state.mobileListVisible = true;
-  updateVisibility();
-
-  const first = conversations.find(conv => !conv.archived);
-  if (first) {
-    openConversation(first.id, { markRead: false });
-    if (!isMobile()) {
-      state.mobileListVisible = false;
-      updateVisibility();
-    }
-  }
-
-  if (!isMobile()) {
-    els.chatView.classList.remove('hidden');
-  } else {
-    setMobileListVisible(true);
-  }
+  showConversationList();
 }
 
 init();
