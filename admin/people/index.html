@@ -160,10 +160,29 @@
       <div class="modal-body">
         <div id="detailsBody" class="details-grid"></div>
 
-        <div class="modal-subsection">
-          <h4 id="relatedTitle">Recent Projects</h4>
-          <div id="relatedList" class="related-list"></div>
-        </div>
+<div class="modal-subsection">
+
+  <div class="projects-header">
+    <h4 id="relatedTitle">Projects</h4>
+
+    <div class="project-filters">
+      <button class="project-filter active" data-project-filter="all">
+        All
+      </button>
+
+      <button class="project-filter" data-project-filter="active">
+        Active
+      </button>
+
+      <button class="project-filter" data-project-filter="past">
+        Past
+      </button>
+    </div>
+  </div>
+
+  <div id="relatedList"></div>
+
+</div>
       </div>
     </div>
   </div>

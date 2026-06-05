@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elevated Web Solutions Portal — Messages</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">
+          <span>E</span>
+        </div>
+        <div class="brand-text">
+          <strong>ELEVATED</strong>
+          <span>WEB SOLUTIONS</span>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a href="#" class="nav-item">Dashboard</a>
+        <a href="#" class="nav-item">Projects</a>
+        <a href="#" class="nav-item">People</a>
+        <a href="#" class="nav-item">Revenue</a>
+        <a href="#" class="nav-item active">Messages</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="ghost-btn signout-btn" type="button">↩ Sign out</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-btn mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="Toggle navigation">
+            ☰
+          </button>
+          <div>
+            <div class="eyebrow">MESSAGES</div>
+            <h1>Manage project communication across clients and team members.</h1>
+            <p>One place for client updates, internal coordination, and project-specific conversations.</p>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button class="primary-btn" type="button">+ New Message</button>
+          <button class="ghost-btn" type="button">Archive View</button>
+        </div>
+      </header>
+
+      <section class="stats-grid" aria-label="Message overview">
+        <article class="stat-card">
+          <span>Unread Messages</span>
+          <strong id="statUnread">12</strong>
+          <p>Across all active conversations</p>
+        </article>
+        <article class="stat-card">
+          <span>Active Conversations</span>
+          <strong id="statActiveConv">18</strong>
+          <p>Currently open and in rotation</p>
+        </article>
+        <article class="stat-card">
+          <span>Clients Messaging</span>
+          <strong id="statClients">8</strong>
+          <p>Client-side discussions</p>
+        </article>
+        <article class="stat-card">
+          <span>Team Conversations</span>
+          <strong id="statTeam">10</strong>
+          <p>Internal coordination chats</p>
+        </article>
+      </section>
+
+      <section class="workspace">
+        <aside class="panel list-panel" id="conversationPanel">
+          <div class="panel-head">
+            <div>
+              <div class="section-kicker">Conversation List</div>
+              <h2>Inbox</h2>
+            </div>
+            <button class="icon-btn" id="collapseListBtn" type="button" title="Collapse list">◀</button>
+          </div>
+
+          <label class="search-box">
+            <span>⌕</span>
+            <input id="searchInput" type="search" placeholder="Search conversations..." autocomplete="off" />
+          </label>
+
+          <div class="filter-row" id="typeFilters" role="tablist" aria-label="Conversation filters">
+            <button class="pill active" data-filter="all" type="button">All</button>
+            <button class="pill" data-filter="unread" type="button">Unread</button>
+            <button class="pill" data-filter="clients" type="button">Clients</button>
+            <button class="pill" data-filter="team" type="button">Team</button>
+            <button class="pill" data-filter="projects" type="button">Projects</button>
+            <button class="pill" data-filter="archived" type="button">Archived</button>
+          </div>
+
+          <div class="conversation-list" id="conversationList"></div>
+        </aside>
+
+        <section class="panel chat-panel" id="chatPanel">
+          <div class="empty-state" id="emptyState">
+            <div class="empty-icon">✦</div>
+            <h3>Select a conversation</h3>
+            <p>Choose a conversation from the left to begin messaging.</p>
+          </div>
+
+          <div class="chat-shell hidden" id="chatShell">
+            <header class="chat-header">
+              <div class="chat-header-main">
+                <div class="chat-title-wrap">
+                  <div class="chat-title" id="chatTitle">Luxury Villa Website</div>
+                  <div class="chat-type" id="chatType">Project Chat</div>
+                </div>
+                <div class="chat-meta" id="chatParticipants">ABC Builders · Rahul · Akash</div>
+              </div>
+
+              <div class="chat-actions">
+                <button class="ghost-btn small" type="button">Search Messages</button>
+                <button class="ghost-btn small" id="archiveBtn" type="button">Archive Chat</button>
+                <button class="icon-btn" type="button" title="More options">⋯</button>
+              </div>
+            </header>
+
+            <div class="messages-area" id="messagesArea" aria-live="polite"></div>
+
+            <div class="composer-area">
+              <div class="attachment-preview hidden" id="attachmentPreview"></div>
+              <div class="composer-row">
+                <label class="attach-btn" for="fileInput">
+                  <input id="fileInput" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.zip,.docx" hidden />
+                  <span>＋</span>
+                  <span>Attach File</span>
+                </label>
+
+                <div class="composer-input-wrap">
+                  <textarea id="messageInput" rows="1" placeholder="Type a message..."></textarea>
+                </div>
+
+                <button class="primary-btn send-btn" id="sendBtn" type="button">Send</button>
+              </div>
+              <div class="composer-hint">Allowed: PDF, PNG, JPG, ZIP, DOCX</div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

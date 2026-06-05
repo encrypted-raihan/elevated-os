@@ -458,13 +458,31 @@ h1 {
 }
 
 .card {
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.02),
+    rgba(255,255,255,0.01)
+  );
+
+  border: 1px solid var(--border);
+
   border-radius: 24px;
+
   padding: 20px;
+
   min-height: 260px;
+
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: .2s ease;
+
+  transition:
+    transform .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease;
+
+  box-shadow:
+    0 8px 30px rgba(0,0,0,.25);
 }
 
 .card:hover {
@@ -625,6 +643,7 @@ h1 {
 
 .modal-body {
   display: block;
+  padding-bottom: 40px;
 }
 
 .details-grid {
@@ -653,8 +672,34 @@ h1 {
 
 .modal-subsection {
   margin-top: 18px;
+  padding-bottom: 32px;
+}
+.modal {
+  width: min(760px, 100%);
+  border-radius: 28px;
+  padding: 32px;
+  background: rgba(13,13,13,.96);
+
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
 }
 
+.modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.15);
+  border-radius: 999px;
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,.25);
+}
 .modal-subsection h4 {
   margin: 0 0 12px;
   font-size: 1.1rem;
@@ -672,6 +717,20 @@ h1 {
   background: rgba(255,255,255,.04);
   border: 1px solid rgba(255,255,255,.06);
   color: var(--text);
+}
+
+.related-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.related-link:hover,
+.related-link:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(201,162,39,.35);
+  background: rgba(201,162,39,.08);
 }
 
 .form-grid {
@@ -884,4 +943,73 @@ h1 {
   .modal-head {
     align-items: start;
   }
+}
+
+
+.projects-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:18px;
+}
+
+.project-filters {
+  display:flex;
+  gap:8px;
+}
+
+.project-filter {
+  background:#111;
+  border:1px solid #1d1d1d;
+  color:#999;
+  padding:8px 14px;
+  border-radius:999px;
+  cursor:pointer;
+}
+
+.project-filter.active {
+  color:#fff;
+  background:rgba(177,18,38,.18);
+  border-color:rgba(177,18,38,.35);
+}
+
+.project-list {
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.project-row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding:16px 18px;
+
+  border:1px solid #1a1a1a;
+
+  border-radius:18px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.02),
+      rgba(255,255,255,.01)
+    );
+}
+
+.project-info h5 {
+  margin:0 0 6px;
+  font-size:15px;
+}
+
+.project-meta {
+  color:#8a8a8a;
+  font-size:13px;
+}
+
+.project-open {
+  text-decoration:none;
+  color:#c9a227;
+  font-weight:600;
 }

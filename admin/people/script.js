@@ -20,7 +20,26 @@ const clients = [
     messages: 32,
     createdAt: '12 Jun 2026',
     status: 'Active',
-    projectsList: ['Luxury Villa Website', 'Real Estate CRM', 'Marketing Website']
+    projectsList: [
+  {
+    id: 'ews-001',
+    name: 'Luxury Villa Website',
+    status: 'Active',
+    role: 'Frontend Developer'
+  },
+  {
+    id: 'ews-010',
+    name: 'Portfolio Website',
+    status: 'Past',
+    role: 'Frontend Developer'
+  },
+  {
+    id: 'ews-011',
+    name: 'Client Dashboard',
+    status: 'Active',
+    role: 'Frontend Developer'
+  }
+]
   },
   {
     id: 2,
@@ -34,7 +53,20 @@ const clients = [
     messages: 18,
     createdAt: '08 Jun 2026',
     status: 'Active',
-    projectsList: ['Restaurant Website', 'Menu Ordering Portal']
+    projectsList: [
+  {
+    id: 'ews-004',
+    name: 'Restaurant Website',
+    status: 'Active',
+    role: 'Frontend Developer'
+  },
+  {
+    id: 'ews-005',
+    name: 'Menu Ordering Portal',
+    status: 'Active',
+    role: 'Frontend Developer'
+  }
+]
   },
   {
     id: 3,
@@ -48,7 +80,26 @@ const clients = [
     messages: 9,
     createdAt: '25 May 2026',
     status: 'Inactive',
-    projectsList: ['E-commerce Redesign']
+    projectsList: [
+  {
+    id: 'ews-001',
+    name: 'Luxury Villa Website',
+    status: 'Active',
+    role: 'Frontend Developer'
+  },
+  {
+    id: 'ews-010',
+    name: 'Portfolio Website',
+    status: 'Past',
+    role: 'Frontend Developer'
+  },
+  {
+    id: 'ews-011',
+    name: 'Client Dashboard',
+    status: 'Active',
+    role: 'Frontend Developer'
+  }
+]
   },
   {
     id: 4,
@@ -62,7 +113,26 @@ const clients = [
     messages: 41,
     createdAt: '02 Jun 2026',
     status: 'Active',
-    projectsList: ['Clinic Booking Site', 'SEO Campaign', 'Landing Page Upgrade']
+    projectsList: [
+  {
+    id: 'ews-007',
+    name: 'Clinic Booking Site',
+    status: 'Active',
+    role: 'Frontend Developer'
+  },
+  {
+    id: 'ews-008',
+    name: 'SEO Campaign',
+    status: 'Active',
+    role: 'Frontend Developer'
+  },
+  {
+    id: 'ews-009',
+    name: 'Landing Page Upgrade',
+    status: 'Active',
+    role: 'Frontend Developer'
+  }
+]
   }
 ];
 
@@ -76,10 +146,30 @@ const team = [
     phone: '+91 88441 22334',
     email: 'rahul@elevatedweb.in',
     projects: 4,
+    activeProjects: 3,
     messages: 25,
     createdAt: '02 Apr 2026',
     status: 'Active',
-    projectsList: ['Luxury Villa Website', 'Portfolio Website', 'Client Dashboard']
+    projectsList: [
+      {
+        id: 'ews-001',
+        name: 'Luxury Villa Website',
+        status: 'Active',
+        role: 'Frontend Developer'
+      },
+      {
+        id: 'ews-010',
+        name: 'Portfolio Website',
+        status: 'Past',
+        role: 'Frontend Developer'
+      },
+      {
+        id: 'ews-011',
+        name: 'Client Dashboard',
+        status: 'Active',
+        role: 'Frontend Developer'
+      }
+    ]
   },
   {
     id: 2,
@@ -90,10 +180,30 @@ const team = [
     phone: '+91 88772 33445',
     email: 'akash@elevatedweb.in',
     projects: 2,
+    activeProjects: 2,
     messages: 14,
     createdAt: '18 Apr 2026',
     status: 'Active',
-    projectsList: ['Client Portal', 'Invoice API']
+    projectsList: [
+  {
+    id: 'ews-001',
+    name: 'Luxury Villa Website',
+    status: 'Active',
+    role: 'Frontend Developer'
+  },
+  {
+    id: 'ews-010',
+    name: 'Portfolio Website',
+    status: 'Past',
+    role: 'Frontend Developer'
+  },
+  {
+    id: 'ews-011',
+    name: 'Client Dashboard',
+    status: 'Active',
+    role: 'Frontend Developer'
+  }
+]
   },
   {
     id: 3,
@@ -104,10 +214,30 @@ const team = [
     phone: '+91 99001 22334',
     email: 'arjun@elevatedweb.in',
     projects: 3,
+    activeProjects: 2,
     messages: 19,
     createdAt: '12 May 2026',
     status: 'Active',
-    projectsList: ['Restaurant Website', 'Project Workspace', 'People Page']
+    projectsList: [
+  {
+    id: 'ews-001',
+    name: 'Luxury Villa Website',
+    status: 'Active',
+    role: 'Frontend Developer'
+  },
+  {
+    id: 'ews-010',
+    name: 'Portfolio Website',
+    status: 'Past',
+    role: 'Frontend Developer'
+  },
+  {
+    id: 'ews-011',
+    name: 'Client Dashboard',
+    status: 'Active',
+    role: 'Frontend Developer'
+  }
+]
   },
   {
     id: 4,
@@ -118,10 +248,30 @@ const team = [
     phone: '+91 99880 77665',
     email: 'sarah@elevatedweb.in',
     projects: 1,
+    activeProjects: 1,
     messages: 8,
     createdAt: '22 May 2026',
     status: 'Inactive',
-    projectsList: ['SEO Campaign']
+    projectsList: [
+  {
+    id: 'ews-001',
+    name: 'Luxury Villa Website',
+    status: 'Active',
+    role: 'Frontend Developer'
+  },
+  {
+    id: 'ews-010',
+    name: 'Portfolio Website',
+    status: 'Past',
+    role: 'Frontend Developer'
+  },
+  {
+    id: 'ews-011',
+    name: 'Client Dashboard',
+    status: 'Active',
+    role: 'Frontend Developer'
+  }
+]
   }
 ];
 
@@ -189,7 +339,7 @@ function getFilteredItems() {
       item.username,
       item.role || '',
       item.status || '',
-      ...(item.projectsList || [])
+      ...(item.projectsList || []).map(p => p.name)
     ].join(' ').toLowerCase();
 
     const matchesSearch = haystack.includes(state.search.toLowerCase());
@@ -298,6 +448,51 @@ function closeModal(modalEl) {
   modalEl.classList.add('hidden');
 }
 
+function renderProjects(projects, filter = 'all') {
+
+  let filtered = projects || [];
+
+  if (filter !== 'all') {
+    filtered = filtered.filter(
+      project =>
+        project.status.toLowerCase() === filter
+    );
+  }
+
+  return `
+    <div class="project-list">
+
+      ${filtered.map(project => `
+
+        <div class="project-row">
+
+          <div class="project-info">
+
+            <h5>${project.name}</h5>
+
+            <div class="project-meta">
+              ${project.role || ''}
+              •
+              ${project.status}
+            </div>
+
+          </div>
+
+          <a
+            href="../project-workspace/index.html?id=${project.id}"
+            class="project-open"
+          >
+            Open →
+          </a>
+
+        </div>
+
+      `).join('')}
+
+    </div>
+  `;
+}
+
 function openDetails(id) {
   const item = getCollection().find(x => x.id === id);
   if (!item) return;
@@ -305,7 +500,7 @@ function openDetails(id) {
   const isClient = state.activeTab === 'clients';
   els.detailsEyebrow.textContent = isClient ? 'Client Details' : 'Team Details';
   els.detailsTitle.textContent = item.name;
-  els.relatedTitle.textContent = isClient ? 'Recent Projects' : 'Projects List';
+  els.relatedTitle.textContent = isClient ? 'Recent Projects' : 'Projects';
 
   const details = isClient ? [
     ['Username', item.username],
@@ -321,6 +516,7 @@ function openDetails(id) {
     ['Temporary Password', item.password],
     ['Role', item.role],
     ['Assigned Projects', item.projects],
+    ['Current Workload', `${item.activeProjects ?? item.projects ?? 0} Active Projects`],
     ['Messages Sent', item.messages],
     ['Date Added', item.createdAt],
     ['Phone Number', item.phone],
@@ -334,9 +530,8 @@ function openDetails(id) {
     </div>
   `).join('');
 
-  els.relatedList.innerHTML = (item.projectsList || [])
-    .map(project => `<span class="related-chip">${project}</span>`)
-    .join('') || '<span class="related-chip">No related projects</span>';
+  els.relatedList.innerHTML =
+renderProjects(item.projectsList, 'all');
 
   openModal(els.detailsModal);
 }
@@ -435,6 +630,7 @@ function submitForm(event) {
       role: els.roleInput.value,
       status: existing?.status || 'Active',
       projects: existing?.projects ?? 0,
+      activeProjects: existing?.activeProjects ?? existing?.projects ?? 0,
       messages: existing?.messages ?? 0,
       createdAt: existing?.createdAt ?? 'Today',
       projectsList: existing?.projectsList ?? []
@@ -550,6 +746,37 @@ function setupEvents() {
       closeModal(els.deleteModal);
     }
   });
+
+
+  document.addEventListener('click', e => {
+
+  const btn =
+    e.target.closest('.project-filter');
+
+  if (!btn) return;
+
+  document
+    .querySelectorAll('.project-filter')
+    .forEach(filter =>
+      filter.classList.remove('active')
+    );
+
+  btn.classList.add('active');
+
+  const item =
+    getCollection().find(
+      x => x.name === els.detailsTitle.textContent
+    );
+
+  if (!item) return;
+
+  els.relatedList.innerHTML =
+    renderProjects(
+      item.projectsList,
+      btn.dataset.projectFilter
+    );
+
+});
 }
 
 setupEvents();
