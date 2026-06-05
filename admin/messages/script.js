@@ -1,249 +1,241 @@
-
-"use strict";
+'use strict';
 
 const conversations = [
   {
     id: 1,
-    type: "project",
-    category: "projects",
-    name: "Luxury Villa Website",
-    projectName: "Luxury Villa Website",
-    participants: ["ABC Builders", "Rahul", "Akash"],
-    lastSender: "ABC Builders",
-    lastMessage: "Can we make the hero section larger?",
-    timestamp: "2m ago",
+    type: 'project',
+    filter: 'projects',
+    name: 'Luxury Villa Website',
+    projectName: 'Luxury Villa Website',
+    participants: ['ABC Builders', 'Rahul', 'Akash'],
+    lastSender: 'ABC Builders',
+    preview: 'Can we make the hero section larger and move the CTA above the fold?',
+    time: '2m ago',
     unread: 3,
     archived: false,
     messages: [
       {
-        side: "left",
-        sender: "ABC Builders",
-        time: "10:32 AM",
-        text: "Can we make the hero section larger?",
+        side: 'left',
+        sender: 'ABC Builders',
+        time: '10:32 AM',
+        text: 'Can we make the hero section larger and move the CTA above the fold?',
         attachments: []
       },
       {
-        side: "right",
-        sender: "Admin",
-        time: "10:35 AM",
-        text: "Yes, we will push the revision today.",
+        side: 'right',
+        sender: 'Admin',
+        time: '10:35 AM',
+        text: 'Yes, we will push the revision today and keep the spacing balanced.',
         attachments: []
       },
       {
-        side: "left",
-        sender: "Rahul",
-        time: "10:41 AM",
-        text: "Homepage changes completed and ready for review.",
-        attachments: ["Brand Guidelines.pdf"]
+        side: 'left',
+        sender: 'Rahul',
+        time: '10:41 AM',
+        text: 'Homepage changes completed and ready for review.',
+        attachments: ['Brand Guidelines.pdf']
       }
     ]
   },
   {
     id: 2,
-    type: "project",
-    category: "projects",
-    name: "Restaurant Website",
-    projectName: "Restaurant Website",
-    participants: ["Spice Route", "Akash"],
-    lastSender: "Admin",
-    lastMessage: "Drafting the menu section now.",
-    timestamp: "18m ago",
+    type: 'project',
+    filter: 'projects',
+    name: 'Restaurant Website',
+    projectName: 'Restaurant Website',
+    participants: ['XYZ Foods', 'Akash'],
+    lastSender: 'XYZ Foods',
+    preview: 'We have uploaded the menu files and updated the brand notes.',
+    time: '15m ago',
     unread: 0,
     archived: false,
     messages: [
       {
-        side: "left",
-        sender: "Spice Route",
-        time: "9:58 AM",
-        text: "Can we use warmer colors for the landing page?",
+        side: 'left',
+        sender: 'XYZ Foods',
+        time: '9:58 AM',
+        text: 'We have uploaded the menu files and updated the brand notes.',
         attachments: []
       },
       {
-        side: "right",
-        sender: "Admin",
-        time: "10:04 AM",
-        text: "Absolutely. I will align the palette with the brand reference.",
-        attachments: []
-      },
-      {
-        side: "left",
-        sender: "Akash",
-        time: "10:20 AM",
-        text: "Drafting the menu section now.",
-        attachments: ["menu-assets.zip"]
+        side: 'right',
+        sender: 'Admin',
+        time: '10:04 AM',
+        text: 'Perfect. I will align the palette and spacing to the new notes.',
+        attachments: ['menu-assets.zip']
       }
     ]
   },
   {
     id: 3,
-    type: "project",
-    category: "projects",
-    name: "Ecommerce Store",
-    projectName: "Ecommerce Store",
-    participants: ["Nova Retail", "Rahul", "Sam"],
-    lastSender: "Nova Retail",
-    lastMessage: "Do we have the mobile mockups?",
-    timestamp: "41m ago",
+    type: 'project',
+    filter: 'projects',
+    name: 'Ecommerce Store',
+    projectName: 'Ecommerce Store',
+    participants: ['Nova Retail', 'Rahul', 'Sam'],
+    lastSender: 'Nova Retail',
+    preview: 'The checkout flow looks good. Please share the mobile preview.',
+    time: '1h ago',
     unread: 2,
     archived: false,
     messages: [
       {
-        side: "left",
-        sender: "Nova Retail",
-        time: "9:12 AM",
-        text: "Do we have the mobile mockups?",
+        side: 'left',
+        sender: 'Nova Retail',
+        time: '9:12 AM',
+        text: 'The checkout flow looks good. Please share the mobile preview.',
         attachments: []
       },
       {
-        side: "right",
-        sender: "Admin",
-        time: "9:19 AM",
-        text: "Yes. I will share the revised version shortly.",
-        attachments: ["mobile-mockup.png"]
+        side: 'right',
+        sender: 'Admin',
+        time: '9:19 AM',
+        text: 'Yes, the revised mobile preview is ready and I will send it shortly.',
+        attachments: ['mobile-mockup.png']
       }
     ]
   },
   {
     id: 4,
-    type: "client",
-    category: "clients",
-    name: "ABC Builders",
-    projectName: "ABC Builders",
-    participants: ["ABC Builders", "Admin"],
-    lastSender: "ABC Builders",
-    lastMessage: "Please share the latest estimate.",
-    timestamp: "1h ago",
+    type: 'client',
+    filter: 'clients',
+    name: 'ABC Builders',
+    projectName: 'Client Conversation',
+    participants: ['ABC Builders', 'Admin'],
+    lastSender: 'ABC Builders',
+    preview: 'Please share the latest estimate and any timeline changes.',
+    time: '1h ago',
     unread: 1,
     archived: false,
     messages: [
       {
-        side: "left",
-        sender: "ABC Builders",
-        time: "9:05 AM",
-        text: "Please share the latest estimate.",
+        side: 'left',
+        sender: 'ABC Builders',
+        time: '9:05 AM',
+        text: 'Please share the latest estimate and any timeline changes.',
         attachments: []
       },
       {
-        side: "right",
-        sender: "Admin",
-        time: "9:11 AM",
-        text: "Shared in the project update file. I will resend it here as well.",
-        attachments: ["estimate.pdf"]
+        side: 'right',
+        sender: 'Admin',
+        time: '9:11 AM',
+        text: 'Shared in the project update file. I will resend it here as well.',
+        attachments: ['estimate.pdf']
       }
     ]
   },
   {
     id: 5,
-    type: "client",
-    category: "clients",
-    name: "Luxury Villa Owner",
-    projectName: "Luxury Villa Website",
-    participants: ["Client", "Admin"],
-    lastSender: "Admin",
-    lastMessage: "The header spacing has been updated.",
-    timestamp: "2h ago",
+    type: 'client',
+    filter: 'clients',
+    name: 'Prime Dentals',
+    projectName: 'SEO Campaign',
+    participants: ['Prime Dentals', 'Admin'],
+    lastSender: 'Prime Dentals',
+    preview: 'Please send the latest ranking report before this evening.',
+    time: '3h ago',
     unread: 0,
     archived: false,
     messages: [
       {
-        side: "left",
-        sender: "Client",
-        time: "8:20 AM",
-        text: "Could you reduce the spacing below the hero text?",
+        side: 'left',
+        sender: 'Prime Dentals',
+        time: '8:20 AM',
+        text: 'Please send the latest ranking report before this evening.',
         attachments: []
       },
       {
-        side: "right",
-        sender: "Admin",
-        time: "8:28 AM",
-        text: "The header spacing has been updated.",
+        side: 'right',
+        sender: 'Admin',
+        time: '8:28 AM',
+        text: 'I will share the report after final verification.',
         attachments: []
       }
     ]
   },
   {
     id: 6,
-    type: "team",
-    category: "team",
-    name: "Rahul",
-    projectName: "Internal Team",
-    participants: ["Admin", "Rahul"],
-    lastSender: "Rahul",
-    lastMessage: "Homepage changes completed and ready for review.",
-    timestamp: "15m ago",
+    type: 'team',
+    filter: 'team',
+    name: 'Rahul',
+    projectName: 'Internal Team',
+    participants: ['Admin', 'Rahul'],
+    lastSender: 'Rahul',
+    preview: 'Homepage changes completed and ready for review.',
+    time: '15m ago',
     unread: 4,
     archived: false,
     messages: [
       {
-        side: "left",
-        sender: "Rahul",
-        time: "10:14 AM",
-        text: "Homepage changes completed and ready for review.",
-        attachments: ["homepage-v3.png"]
+        side: 'left',
+        sender: 'Rahul',
+        time: '10:14 AM',
+        text: 'Homepage changes completed and ready for review.',
+        attachments: ['homepage-v3.png']
       },
       {
-        side: "right",
-        sender: "Admin",
-        time: "10:18 AM",
-        text: "Perfect. Send it to the client channel after I approve it.",
+        side: 'right',
+        sender: 'Admin',
+        time: '10:18 AM',
+        text: 'Perfect. Send it to the client channel after I approve it.',
         attachments: []
       }
     ]
   },
   {
     id: 7,
-    type: "team",
-    category: "team",
-    name: "Akash",
-    projectName: "Internal Team",
-    participants: ["Admin", "Akash"],
-    lastSender: "Admin",
-    lastMessage: "Please finalize the responsive spacing.",
-    timestamp: "58m ago",
+    type: 'team',
+    filter: 'team',
+    name: 'Akash',
+    projectName: 'Internal Team',
+    participants: ['Admin', 'Akash'],
+    lastSender: 'Admin',
+    preview: 'Please finalize the responsive spacing before deployment.',
+    time: '58m ago',
     unread: 0,
     archived: false,
     messages: [
       {
-        side: "left",
-        sender: "Akash",
-        time: "9:40 AM",
-        text: "I have fixed the banner layout on tablet screens.",
+        side: 'left',
+        sender: 'Akash',
+        time: '9:40 AM',
+        text: 'I have fixed the banner layout on tablet screens.',
         attachments: []
       },
       {
-        side: "right",
-        sender: "Admin",
-        time: "9:45 AM",
-        text: "Please finalize the responsive spacing.",
+        side: 'right',
+        sender: 'Admin',
+        time: '9:45 AM',
+        text: 'Please finalize the responsive spacing before deployment.',
         attachments: []
       }
     ]
   },
   {
     id: 8,
-    type: "client",
-    category: "clients",
-    name: "Nova Retail",
-    projectName: "Ecommerce Store",
-    participants: ["Nova Retail", "Admin"],
-    lastSender: "Nova Retail",
-    lastMessage: "Can we add a wishlist icon in the header?",
-    timestamp: "3h ago",
+    type: 'client',
+    filter: 'clients',
+    name: 'Nova Retail',
+    projectName: 'Ecommerce Store',
+    participants: ['Nova Retail', 'Admin'],
+    lastSender: 'Nova Retail',
+    preview: 'Can we add a wishlist icon in the header without cluttering it?',
+    time: '3h ago',
     unread: 0,
     archived: true,
     messages: [
       {
-        side: "left",
-        sender: "Nova Retail",
-        time: "6:01 PM",
-        text: "Can we add a wishlist icon in the header?",
+        side: 'left',
+        sender: 'Nova Retail',
+        time: '6:01 PM',
+        text: 'Can we add a wishlist icon in the header without cluttering it?',
         attachments: []
       },
       {
-        side: "right",
-        sender: "Admin",
-        time: "6:08 PM",
-        text: "Yes, we can add it without affecting the layout.",
+        side: 'right',
+        sender: 'Admin',
+        time: '6:08 PM',
+        text: 'Yes, we can add it without affecting the layout.',
         attachments: []
       }
     ]
@@ -251,58 +243,88 @@ const conversations = [
 ];
 
 const state = {
-  filter: "all",
-  search: "",
+  filter: 'all',
+  search: '',
   activeId: null,
-  pendingAttachments: []
+  pendingAttachments: [],
+  mobileListVisible: true
 };
 
 const els = {
-  conversationList: document.getElementById("conversationList"),
-  searchInput: document.getElementById("searchInput"),
-  filters: document.getElementById("typeFilters"),
-  emptyState: document.getElementById("emptyState"),
-  chatShell: document.getElementById("chatShell"),
-  chatTitle: document.getElementById("chatTitle"),
-  chatType: document.getElementById("chatType"),
-  chatParticipants: document.getElementById("chatParticipants"),
-  messagesArea: document.getElementById("messagesArea"),
-  archiveBtn: document.getElementById("archiveBtn"),
-  fileInput: document.getElementById("fileInput"),
-  messageInput: document.getElementById("messageInput"),
-  sendBtn: document.getElementById("sendBtn"),
-  attachmentPreview: document.getElementById("attachmentPreview"),
-  statUnread: document.getElementById("statUnread"),
-  statActiveConv: document.getElementById("statActiveConv"),
-  statClients: document.getElementById("statClients"),
-  statTeam: document.getElementById("statTeam"),
-  mobileNavToggle: document.getElementById("mobileNavToggle"),
-  sidebar: document.querySelector(".sidebar"),
-  collapseListBtn: document.getElementById("collapseListBtn"),
-  conversationPanel: document.getElementById("conversationPanel")
+  sidebar: document.getElementById('sidebar'),
+  backdrop: document.getElementById('backdrop'),
+  openSidebar: document.getElementById('openSidebar'),
+  backBtn: document.getElementById('backBtn'),
+  backToListTop: document.getElementById('backToListTop'),
+  conversationView: document.getElementById('conversationView'),
+  chatView: document.getElementById('chatView'),
+  conversationList: document.getElementById('conversationList'),
+  searchInput: document.getElementById('searchInput'),
+  filterBar: document.getElementById('filterBar'),
+  activeFilterLabel: document.getElementById('activeFilterLabel'),
+  countLabel: document.getElementById('countLabel'),
+  chatTitle: document.getElementById('chatTitle'),
+  chatBadge: document.getElementById('chatBadge'),
+  chatParticipants: document.getElementById('chatParticipants'),
+  messagesArea: document.getElementById('messagesArea'),
+  archiveBtn: document.getElementById('archiveBtn'),
+  fileInput: document.getElementById('fileInput'),
+  messageInput: document.getElementById('messageInput'),
+  sendBtn: document.getElementById('sendBtn'),
+  attachmentPreview: document.getElementById('attachmentPreview')
 };
 
 function getConversation(id) {
-  return conversations.find(c => c.id === id) || null;
+  return conversations.find(conv => conv.id === id) || null;
 }
 
 function formatType(type) {
-  if (type === "project") return "Project Chat";
-  if (type === "client") return "Client Chat";
-  return "Team Chat";
+  if (type === 'project') return 'Project Chat';
+  if (type === 'client') return 'Client Chat';
+  return 'Team Chat';
+}
+
+function initials(name) {
+  const cleaned = String(name).trim().split(/\s+/);
+  if (!cleaned.length) return 'M';
+  if (cleaned.length === 1) return cleaned[0].slice(0, 2).toUpperCase();
+  return (cleaned[0][0] + cleaned[1][0]).toUpperCase();
+}
+
+function filterLabel(filter) {
+  return {
+    all: 'All',
+    unread: 'Unread',
+    clients: 'Clients',
+    team: 'Team',
+    projects: 'Projects',
+    archived: 'Archived'
+  }[filter] || 'All';
+}
+
+function updateVisibility() {
+  const activeVisible = window.innerWidth > 920 || state.mobileListVisible;
+  els.conversationView.classList.toggle('hidden', !activeVisible);
+  els.chatView.classList.toggle('hidden', activeVisible);
+  els.backToListTop.hidden = activeVisible;
+}
+
+function setMobileListVisible(value) {
+  state.mobileListVisible = value;
+  updateVisibility();
 }
 
 function getFilteredConversations() {
   const q = state.search.trim().toLowerCase();
 
   return conversations.filter(conv => {
-    if (state.filter === "archived" && !conv.archived) return false;
-    if (state.filter !== "archived" && conv.archived) return false;
+    if (state.filter === 'archived' && !conv.archived) return false;
+    if (state.filter !== 'archived' && conv.archived) return false;
 
-    if (state.filter === "unread" && conv.unread <= 0) return false;
-    if (state.filter === "clients" && conv.type !== "client") return false;
-    if (state.filter === "team" && conv.type !== "team") return false;
-    if (state.filter === "projects" && conv.type !== "project") return false;
+    if (state.filter === 'unread' && conv.unread <= 0) return false;
+    if (state.filter === 'clients' && conv.type !== 'client') return false;
+    if (state.filter === 'team' && conv.type !== 'team') return false;
+    if (state.filter === 'projects' && conv.type !== 'project') return false;
 
     if (!q) return true;
 
@@ -310,107 +332,99 @@ function getFilteredConversations() {
       conv.name,
       conv.projectName,
       conv.lastSender,
-      conv.lastMessage,
-      conv.participants.join(" ")
-    ].join(" ").toLowerCase();
+      conv.preview,
+      conv.participants.join(' ')
+    ].join(' ').toLowerCase();
 
     return haystack.includes(q);
   });
 }
 
-function updateStats() {
-  const unread = conversations.reduce((sum, c) => sum + c.unread, 0);
-  const active = conversations.filter(c => !c.archived).length;
-  const clientCount = conversations.filter(c => !c.archived && c.type === "client").length;
-  const teamCount = conversations.filter(c => !c.archived && c.type === "team").length;
-
-  els.statUnread.textContent = unread;
-  els.statActiveConv.textContent = active;
-  els.statClients.textContent = clientCount;
-  els.statTeam.textContent = teamCount;
-}
-
 function renderConversationList() {
   const filtered = getFilteredConversations();
-
-  els.conversationList.innerHTML = "";
+  els.conversationList.innerHTML = '';
 
   if (!filtered.length) {
     els.conversationList.innerHTML = `
-      <div class="empty-state" style="position:static; min-height:260px;">
-        <div class="empty-icon">⌁</div>
-        <h3>No conversations found</h3>
-        <p>Try another filter or search term.</p>
+      <div class="empty-card">
+        <div class="empty-illustration">⌁</div>
+        <h4>No conversations found</h4>
+        <p>Try a different filter or search term.</p>
       </div>
     `;
+    els.countLabel.textContent = '0 chats';
     return;
   }
 
-  filtered.forEach(conv => {
-    const item = document.createElement("article");
-    item.className = `conversation-item ${conv.id === state.activeId ? "active" : ""}`;
-    item.dataset.id = String(conv.id);
+  els.countLabel.textContent = `${filtered.length} chat${filtered.length === 1 ? '' : 's'}`;
 
-    item.innerHTML = `
-      <div class="conv-main">
-        <div class="conv-title-row">
-          <h3 class="conv-name">${conv.name}</h3>
-          <span class="conv-type">${conv.type}</span>
+  filtered.forEach(conv => {
+    const card = document.createElement('article');
+    card.className = `conversation-card ${conv.id === state.activeId ? 'active' : ''}`;
+    card.tabIndex = 0;
+    card.setAttribute('role', 'button');
+    card.setAttribute('aria-label', `Open ${conv.name}`);
+
+    card.innerHTML = `
+      <div class="avatar" aria-hidden="true">${initials(conv.name)}</div>
+      <div class="card-body">
+        <div class="card-top">
+          <h4 class="card-name">${conv.name}</h4>
+          <span class="card-type">${conv.type}</span>
         </div>
-        <p class="conv-sub">${conv.lastSender}</p>
-        <p class="conv-preview">${conv.lastMessage}</p>
-      </div>
-      <div class="conv-meta">
-        <span class="conv-time">${conv.timestamp}</span>
-        <span class="badge ${conv.unread ? "" : "hidden"}">${conv.unread}</span>
-        ${conv.archived ? `<span class="muted-tag">Archived</span>` : ""}
+        <div class="card-meta">${conv.lastSender}</div>
+        <p class="card-preview">${conv.preview}</p>
+        <div class="card-bottom">
+          <span class="card-time">${conv.time}</span>
+          <span class="unread-badge ${conv.unread ? '' : 'hidden'}">${conv.unread}</span>
+        </div>
       </div>
     `;
 
-    item.addEventListener("click", () => openConversation(conv.id, { markRead: true }));
-    els.conversationList.appendChild(item);
+    const open = () => openConversation(conv.id, { markRead: true });
+
+    card.addEventListener('click', open);
+    card.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        open();
+      }
+    });
+
+    els.conversationList.appendChild(card);
   });
 }
 
-function renderAttachmentPreview() {
-  const files = state.pendingAttachments;
-
-  if (!files.length) {
-    els.attachmentPreview.classList.add("hidden");
-    els.attachmentPreview.innerHTML = "";
+function renderAttachments(list) {
+  if (!list.length) {
+    els.attachmentPreview.classList.add('hidden');
+    els.attachmentPreview.innerHTML = '';
     return;
   }
 
-  els.attachmentPreview.classList.remove("hidden");
-  els.attachmentPreview.innerHTML = files.map((file, index) => `
+  els.attachmentPreview.classList.remove('hidden');
+  els.attachmentPreview.innerHTML = list.map((file, index) => `
     <div class="pending-attachment">
       <span class="file-dot"></span>
       <div>
         <div class="attachment-name">${file.name}</div>
-        <div class="attachment-type">${file.type || "File"}</div>
+        <div class="attachment-type">${file.type}</div>
       </div>
       <button class="remove" type="button" data-remove-index="${index}" aria-label="Remove attachment">×</button>
     </div>
-  `).join("");
+  `).join('');
 
-  els.attachmentPreview.querySelectorAll("[data-remove-index]").forEach(btn => {
-    btn.addEventListener("click", () => {
+  els.attachmentPreview.querySelectorAll('[data-remove-index]').forEach(btn => {
+    btn.addEventListener('click', () => {
       const idx = Number(btn.dataset.removeIndex);
       state.pendingAttachments.splice(idx, 1);
-      renderAttachmentPreview();
+      renderAttachments(state.pendingAttachments);
     });
-  });
-}
-
-function scrollMessagesToBottom() {
-  requestAnimationFrame(() => {
-    els.messagesArea.scrollTop = els.messagesArea.scrollHeight;
   });
 }
 
 function renderMessages(conv) {
   els.messagesArea.innerHTML = conv.messages.map(msg => {
-    const sideClass = msg.side === "right" ? "right" : "left";
     const attachments = (msg.attachments || []).map(name => `
       <div class="attachment-card">
         <span class="file-dot"></span>
@@ -419,21 +433,25 @@ function renderMessages(conv) {
           <div class="attachment-type">Attachment</div>
         </div>
       </div>
-    `).join("");
+    `).join('');
 
     return `
-      <div class="message-row ${sideClass}">
-        <div class="message ${sideClass}">
-          <div class="message-header">
+      <div class="message-row ${msg.side}">
+        <div class="message-bubble">
+          <div class="message-head">
             <span class="message-sender">${msg.sender}</span>
             <span class="message-time">${msg.time}</span>
           </div>
-          <div class="message-body">${msg.text}</div>
-          ${attachments ? `<div class="message-attach">${attachments}</div>` : ""}
+          <div class="message-text">${msg.text}</div>
+          ${attachments ? `<div class="attachments">${attachments}</div>` : ''}
         </div>
       </div>
     `;
-  }).join("");
+  }).join('');
+
+  requestAnimationFrame(() => {
+    els.messagesArea.scrollTop = els.messagesArea.scrollHeight;
+  });
 }
 
 function openConversation(id, { markRead = false } = {}) {
@@ -441,45 +459,52 @@ function openConversation(id, { markRead = false } = {}) {
   if (!conv) return;
 
   state.activeId = id;
-  conv.archived = false;
 
   if (markRead) {
     conv.unread = 0;
   }
 
-  els.emptyState.classList.add("hidden");
-  els.chatShell.classList.remove("hidden");
-
   els.chatTitle.textContent = conv.name;
-  els.chatType.textContent = formatType(conv.type);
-  els.chatParticipants.textContent = conv.participants.join(" · ");
-  els.archiveBtn.textContent = conv.archived ? "Unarchive Chat" : "Archive Chat";
+  els.chatBadge.textContent = formatType(conv.type);
+  els.chatParticipants.textContent = conv.participants.join(' • ');
+  els.archiveBtn.textContent = conv.archived ? 'Unarchive Chat' : 'Archive Chat';
 
   renderMessages(conv);
   renderConversationList();
-  updateStats();
-  scrollMessagesToBottom();
-
-  if (window.innerWidth <= 980) {
-    els.conversationPanel.classList.add("hidden");
-    els.chatPanel?.classList.add?.("full");
-  }
+  setMobileListVisible(false);
 }
 
-function archiveActiveConversation() {
+function openConversationList() {
+  state.activeId = state.activeId;
+  setMobileListVisible(true);
+}
+
+function toggleArchive() {
   const conv = getConversation(state.activeId);
   if (!conv) return;
-  conv.archived = !conv.archived;
-  renderConversationList();
-  updateStats();
 
-  if (conv.archived && state.filter !== "archived") {
+  conv.archived = !conv.archived;
+
+  if (state.filter !== 'archived' && conv.archived) {
     state.activeId = null;
-    els.chatShell.classList.add("hidden");
-    els.emptyState.classList.remove("hidden");
+    renderConversationList();
+    els.chatTitle.textContent = 'Select a conversation';
+    els.chatBadge.textContent = 'Project Chat';
+    els.chatParticipants.textContent = 'Choose a conversation from the left to begin messaging.';
+    els.messagesArea.innerHTML = '';
+    els.chatView.classList.add('hidden');
+    els.conversationView.classList.remove('hidden');
+    state.mobileListVisible = true;
   } else {
     openConversation(conv.id, { markRead: false });
   }
+
+  renderConversationList();
+}
+
+function autosizeTextarea(textarea) {
+  textarea.style.height = 'auto';
+  textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
 }
 
 function sendMessage() {
@@ -487,105 +512,151 @@ function sendMessage() {
   if (!conv) return;
 
   const text = els.messageInput.value.trim();
-  const attachmentNames = state.pendingAttachments.map(f => f.name);
+  const attachments = state.pendingAttachments.map(file => file.name);
 
-  if (!text && !attachmentNames.length) return;
+  if (!text && !attachments.length) return;
 
-  const time = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const time = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
   conv.messages.push({
-    side: "right",
-    sender: "Admin",
+    side: 'right',
+    sender: 'Admin',
     time,
-    text: text || "Shared an attachment.",
-    attachments: attachmentNames
+    text: text || 'Shared attachments.',
+    attachments
   });
 
-  conv.lastSender = "Admin";
-  conv.lastMessage = text || attachmentNames.join(", ");
-  conv.timestamp = "Just now";
+  conv.lastSender = 'Admin';
+  conv.preview = text || attachments.join(', ');
+  conv.time = 'Just now';
   conv.unread = 0;
   state.pendingAttachments = [];
 
-  els.messageInput.value = "";
-  renderAttachmentPreview();
+  els.messageInput.value = '';
+  autosizeTextarea(els.messageInput);
+  renderAttachments([]);
   renderMessages(conv);
   renderConversationList();
-  updateStats();
-  scrollMessagesToBottom();
 }
 
 function applyFilter(filter) {
   state.filter = filter;
-  [...els.filters.querySelectorAll(".pill")].forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.filter === filter);
+  els.activeFilterLabel.textContent = filterLabel(filter);
+  [...els.filterBar.querySelectorAll('.filter-pill')].forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
   });
   renderConversationList();
 }
 
-els.filters.addEventListener("click", (e) => {
-  const btn = e.target.closest(".pill");
+function isMobile() {
+  return window.innerWidth <= 920;
+}
+
+els.filterBar.addEventListener('click', (event) => {
+  const btn = event.target.closest('.filter-pill');
   if (!btn) return;
   applyFilter(btn.dataset.filter);
 });
 
-els.searchInput.addEventListener("input", (e) => {
-  state.search = e.target.value;
+els.searchInput.addEventListener('input', (event) => {
+  state.search = event.target.value;
   renderConversationList();
 });
 
-els.sendBtn.addEventListener("click", sendMessage);
-els.archiveBtn.addEventListener("click", archiveActiveConversation);
+els.backBtn.addEventListener('click', () => {
+  setMobileListVisible(true);
+});
 
-els.messageInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
+els.backToListTop.addEventListener('click', () => {
+  setMobileListVisible(true);
+});
+
+els.archiveBtn.addEventListener('click', toggleArchive);
+
+els.fileInput.addEventListener('change', (event) => {
+  const selected = [...(event.target.files || [])].map(file => ({
+    name: file.name,
+    type: file.type || file.name.split('.').pop().toUpperCase()
+  }));
+
+  if (selected.length) {
+    state.pendingAttachments.push(...selected);
+    renderAttachments(state.pendingAttachments);
+  }
+
+  event.target.value = '';
+});
+
+els.messageInput.addEventListener('input', (event) => autosizeTextarea(event.target));
+
+els.messageInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
     sendMessage();
   }
 });
 
-els.fileInput.addEventListener("change", (e) => {
-  const selected = [...e.target.files || []].map(file => ({
-    name: file.name,
-    type: file.type || file.name.split(".").pop().toUpperCase()
-  }));
+els.sendBtn.addEventListener('click', sendMessage);
 
-  if (!selected.length) return;
-  state.pendingAttachments.push(...selected);
-  renderAttachmentPreview();
-  e.target.value = "";
+els.openSidebar.addEventListener('click', () => {
+  els.sidebar.classList.add('open');
+  els.backdrop.hidden = false;
 });
 
-els.mobileNavToggle.addEventListener("click", () => {
-  els.sidebar.classList.toggle("open");
+els.backdrop.addEventListener('click', () => {
+  els.sidebar.classList.remove('open');
+  els.backdrop.hidden = true;
 });
 
-els.collapseListBtn.addEventListener("click", () => {
-  els.conversationPanel.classList.toggle("hidden");
+document.addEventListener('click', (event) => {
+  if (!event.target.closest('.sidebar') && !event.target.closest('#openSidebar')) {
+    els.sidebar.classList.remove('open');
+    els.backdrop.hidden = true;
+  }
 });
 
-document.addEventListener("click", (e) => {
-  if (window.innerWidth <= 980 && els.sidebar.classList.contains("open")) {
-    const insideSidebar = e.target.closest(".sidebar");
-    const isToggle = e.target.closest("#mobileNavToggle");
-    if (!insideSidebar && !isToggle) {
-      els.sidebar.classList.remove("open");
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    els.sidebar.classList.remove('open');
+    els.backdrop.hidden = true;
+  }
+});
+
+window.addEventListener('resize', () => {
+  if (!isMobile()) {
+    state.mobileListVisible = true;
+    els.chatView.classList.remove('hidden');
+    els.conversationView.classList.remove('hidden');
+    els.backToListTop.hidden = true;
+  } else {
+    if (state.activeId) {
+      setMobileListVisible(false);
+    } else {
+      setMobileListVisible(true);
     }
   }
 });
 
-window.addEventListener("resize", () => {
-  if (window.innerWidth > 980) {
-    els.conversationPanel.classList.remove("hidden");
-    els.sidebar.classList.remove("open");
-  }
-});
-
 function init() {
-  updateStats();
   renderConversationList();
-  applyFilter("all");
-  const firstVisible = getFilteredConversations()[0];
-  if (firstVisible) openConversation(firstVisible.id, { markRead: false });
+  applyFilter('all');
+  state.mobileListVisible = true;
+  updateVisibility();
+
+  const first = conversations.find(conv => !conv.archived);
+  if (first) {
+    openConversation(first.id, { markRead: false });
+    if (!isMobile()) {
+      state.mobileListVisible = false;
+      updateVisibility();
+    }
+  }
+
+  if (!isMobile()) {
+    els.chatView.classList.remove('hidden');
+  } else {
+    setMobileListVisible(true);
+  }
 }
 
 init();

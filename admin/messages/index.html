@@ -4,145 +4,150 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Elevated Web Solutions Portal — Messages</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="app-shell">
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
       <div class="brand">
         <div class="brand-mark">
-          <span>E</span>
+          <img
+            src="../../assets/elevatedlogo.png"
+            alt="Elevated Web Solutions"
+            class="brand-logo"
+          />
         </div>
-        <div class="brand-text">
-          <strong>ELEVATED</strong>
-          <span>WEB SOLUTIONS</span>
+
+        <div class="brand-content">
+          <h2>ELEVATED</h2>
+          <p>WEB SOLUTIONS</p>
         </div>
       </div>
 
       <nav class="nav">
-        <a href="#" class="nav-item">Dashboard</a>
-        <a href="#" class="nav-item">Projects</a>
-        <a href="#" class="nav-item">People</a>
-        <a href="#" class="nav-item">Revenue</a>
-        <a href="#" class="nav-item active">Messages</a>
+        <a class="nav-item" href="../dashboard/index.html">
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-item" href="../projects/index.html">
+          <span>Projects</span>
+        </a>
+        <a class="nav-item" href="../people/index.html">
+          <span>People</span>
+        </a>
+        <a class="nav-item" href="../revenue/index.html">
+          <span>Revenue</span>
+        </a>
+        <a class="nav-item active" href="../messages/index.html" aria-current="page">
+          <span>Messages</span>
+        </a>
       </nav>
 
       <div class="sidebar-footer">
-        <button class="ghost-btn signout-btn" type="button">↩ Sign out</button>
+        <button class="logout-btn" type="button">
+          <span aria-hidden="true">↩</span>
+          Sign out
+        </button>
       </div>
     </aside>
+
+    <div class="backdrop" id="backdrop" hidden></div>
 
     <main class="main">
       <header class="topbar">
         <div class="topbar-left">
-          <button class="icon-btn mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="Toggle navigation">
-            ☰
+          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar" type="button">
+            <span aria-hidden="true">☰</span>
           </button>
+
           <div>
-            <div class="eyebrow">MESSAGES</div>
+            <p class="eyebrow">Messages</p>
             <h1>Manage project communication across clients and team members.</h1>
-            <p>One place for client updates, internal coordination, and project-specific conversations.</p>
+            <p class="subtext">View all conversations, search quickly, and jump into chats without leaving the portal.</p>
           </div>
         </div>
-        <div class="topbar-actions">
-          <button class="primary-btn" type="button">+ New Message</button>
-          <button class="ghost-btn" type="button">Archive View</button>
+
+        <div class="topbar-right">
+          <button class="new-project-btn" type="button">+ New Message</button>
+          <button class="ghost-action" id="backToListTop" type="button" hidden>← Back to list</button>
         </div>
       </header>
 
-      <section class="stats-grid" aria-label="Message overview">
-        <article class="stat-card">
-          <span>Unread Messages</span>
-          <strong id="statUnread">12</strong>
-          <p>Across all active conversations</p>
-        </article>
-        <article class="stat-card">
-          <span>Active Conversations</span>
-          <strong id="statActiveConv">18</strong>
-          <p>Currently open and in rotation</p>
-        </article>
-        <article class="stat-card">
-          <span>Clients Messaging</span>
-          <strong id="statClients">8</strong>
-          <p>Client-side discussions</p>
-        </article>
-        <article class="stat-card">
-          <span>Team Conversations</span>
-          <strong id="statTeam">10</strong>
-          <p>Internal coordination chats</p>
-        </article>
-      </section>
-
-      <section class="workspace">
-        <aside class="panel list-panel" id="conversationPanel">
+      <section class="message-app" id="messageApp">
+        <section class="conversation-view" id="conversationView" aria-label="Conversation list">
           <div class="panel-head">
             <div>
-              <div class="section-kicker">Conversation List</div>
-              <h2>Inbox</h2>
+              <p class="section-kicker">Inbox</p>
+              <h3>All Conversations</h3>
             </div>
-            <button class="icon-btn" id="collapseListBtn" type="button" title="Collapse list">◀</button>
+            <div class="list-meta">
+              <span class="list-chip" id="activeFilterLabel">All</span>
+              <span class="list-chip subtle" id="countLabel">0 chats</span>
+            </div>
           </div>
 
-          <label class="search-box">
-            <span>⌕</span>
+          <div class="search-wrap">
+            <span class="search-icon" aria-hidden="true">⌕</span>
             <input id="searchInput" type="search" placeholder="Search conversations..." autocomplete="off" />
-          </label>
-
-          <div class="filter-row" id="typeFilters" role="tablist" aria-label="Conversation filters">
-            <button class="pill active" data-filter="all" type="button">All</button>
-            <button class="pill" data-filter="unread" type="button">Unread</button>
-            <button class="pill" data-filter="clients" type="button">Clients</button>
-            <button class="pill" data-filter="team" type="button">Team</button>
-            <button class="pill" data-filter="projects" type="button">Projects</button>
-            <button class="pill" data-filter="archived" type="button">Archived</button>
           </div>
 
-          <div class="conversation-list" id="conversationList"></div>
-        </aside>
-
-        <section class="panel chat-panel" id="chatPanel">
-          <div class="empty-state" id="emptyState">
-            <div class="empty-icon">✦</div>
-            <h3>Select a conversation</h3>
-            <p>Choose a conversation from the left to begin messaging.</p>
+          <div class="filters" id="filterBar" role="tablist" aria-label="Conversation filters">
+            <button class="filter-pill active" type="button" data-filter="all">All</button>
+            <button class="filter-pill" type="button" data-filter="unread">Unread</button>
+            <button class="filter-pill" type="button" data-filter="clients">Clients</button>
+            <button class="filter-pill" type="button" data-filter="team">Team</button>
+            <button class="filter-pill" type="button" data-filter="projects">Projects</button>
+            <button class="filter-pill" type="button" data-filter="archived">Archived</button>
           </div>
 
-          <div class="chat-shell hidden" id="chatShell">
+          <div class="conversation-list" id="conversationList" aria-live="polite"></div>
+        </section>
+
+        <section class="chat-view hidden" id="chatView" aria-label="Chat view">
+          <div class="chat-shell">
             <header class="chat-header">
+              <button class="back-btn" id="backBtn" type="button">← Back</button>
+
               <div class="chat-header-main">
-                <div class="chat-title-wrap">
-                  <div class="chat-title" id="chatTitle">Luxury Villa Website</div>
-                  <div class="chat-type" id="chatType">Project Chat</div>
+                <div class="chat-title-row">
+                  <h2 id="chatTitle">Select a conversation</h2>
+                  <span class="chat-badge" id="chatBadge">Project Chat</span>
                 </div>
-                <div class="chat-meta" id="chatParticipants">ABC Builders · Rahul · Akash</div>
+                <p class="chat-participants" id="chatParticipants">Choose a conversation from the left to begin messaging.</p>
               </div>
 
               <div class="chat-actions">
-                <button class="ghost-btn small" type="button">Search Messages</button>
-                <button class="ghost-btn small" id="archiveBtn" type="button">Archive Chat</button>
-                <button class="icon-btn" type="button" title="More options">⋯</button>
+                <button class="ghost-action small" type="button">Search Messages</button>
+                <button class="ghost-action small" id="archiveBtn" type="button">Archive Chat</button>
+                <button class="ghost-action small" type="button">More</button>
               </div>
             </header>
 
-            <div class="messages-area" id="messagesArea" aria-live="polite"></div>
+            <div class="chat-content">
+              <div class="messages-area" id="messagesArea"></div>
+            </div>
 
-            <div class="composer-area">
+            <footer class="composer">
               <div class="attachment-preview hidden" id="attachmentPreview"></div>
+
               <div class="composer-row">
                 <label class="attach-btn" for="fileInput">
                   <input id="fileInput" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.zip,.docx" hidden />
                   <span>＋</span>
-                  <span>Attach File</span>
+                  <span>Attach</span>
                 </label>
 
                 <div class="composer-input-wrap">
                   <textarea id="messageInput" rows="1" placeholder="Type a message..."></textarea>
                 </div>
 
-                <button class="primary-btn send-btn" id="sendBtn" type="button">Send</button>
+                <button class="send-btn" id="sendBtn" type="button">Send</button>
               </div>
-              <div class="composer-hint">Allowed: PDF, PNG, JPG, ZIP, DOCX</div>
-            </div>
+
+              <p class="composer-hint">Allowed attachments: PDF, PNG, JPG, ZIP, DOCX</p>
+            </footer>
           </div>
         </section>
       </section>
