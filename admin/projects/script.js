@@ -294,10 +294,7 @@ function renderProjects() {
           </div>
         </div>
 
-        <div class="project-actions">
-          <span>Click to open workspace</span>
-          <span class="view-link">View Project <span class="arrow">↗</span></span>
-        </div>
+
       </article>
     `
     )
