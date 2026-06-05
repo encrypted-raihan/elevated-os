@@ -9,6 +9,7 @@ const state = {
     { id: "CL-003", name: "Nova Retail", username: "novaretail", password: "Temp@1234" },
     { id: "CL-004", name: "Prime Dentals", username: "primedentals", password: "Temp@1234" },
     { id: "CL-005", name: "Justice & Co.", username: "justiceco", password: "Temp@1234" },
+    { id: "CL-006", name: "Sunrise Properties", username: "sunriseproperties", password: "Temp@1234" },
   ],
   projects: [
     {
@@ -150,7 +151,21 @@ const els = {
   clientName: document.getElementById("clientName"),
   clientUsername: document.getElementById("clientUsername"),
   clientPassword: document.getElementById("clientPassword"),
+  notificationList: document.getElementById("notificationList"),
+  notificationBtn: document.getElementById("notificationBtn"),
+  notificationDropdown: document.getElementById("notificationDropdown"),
+  notificationCount: document.getElementById("notificationCount"),
+  openSidebarBtn: document.getElementById("openSidebar"),
+  closeSidebarBtn: document.getElementById("closeSidebar"),
+  sidebar: document.getElementById("sidebar"),
+  backdrop: document.getElementById("backdrop"),
 };
+
+const notifications = [
+  "Client approved Homepage Design",
+  "Invoice INV-EWS001-02 marked paid",
+  "New message in Luxury Villa Website",
+];
 
 function formatDate(isoDate) {
   const date = new Date(`${isoDate}T00:00:00`);
@@ -159,14 +174,6 @@ function formatDate(isoDate) {
     month: "short",
     year: "numeric",
   }).format(date);
-}
-
-function formatCurrency(value) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(value);
 }
 
 function normalize(text) {
@@ -246,8 +253,16 @@ function closeAllModals() {
   [els.projectModal, els.clientModal].forEach((modal) => closeModal(modal));
 }
 
-function progressClass(status) {
-  return status;
+function renderNotifications() {
+  els.notificationList.innerHTML = notifications
+    .map((note) => `
+      <div class="dropdown-item">
+        <strong>${note}</strong>
+        <span>Just now</span>
+      </div>
+    `)
+    .join("");
+  els.notificationCount.textContent = notifications.length;
 }
 
 function renderProjects() {
@@ -255,10 +270,11 @@ function renderProjects() {
 
   els.resultsCount.textContent = `${items.length} project${items.length === 1 ? "" : "s"} shown`;
   els.emptyState.hidden = items.length !== 0;
+
   els.projectsGrid.innerHTML = items
     .map(
       (project) => `
-      <article class="project-card" tabindex="0" role="button" data-project-id="${project.id}" aria-label="Open ${project.name}">
+      <article class="project-card" tabindex="0" role="button" data-project-id="${project.id}" data-status="${project.status}" aria-label="Open ${project.name}">
         <div class="project-top">
           <div>
             <h3 class="project-title">${project.name}</h3>
@@ -293,14 +309,11 @@ function renderProjects() {
             <div class="progress-fill" style="width:${project.progress}%"></div>
           </div>
         </div>
-
-
       </article>
     `
     )
     .join("");
 
-  // Trigger the width transition after paint
   requestAnimationFrame(() => {
     document.querySelectorAll(".progress-fill").forEach((bar) => {
       bar.style.width = bar.style.width;
@@ -368,6 +381,18 @@ function handleProjectOpen(projectId) {
   navigateToWorkspace(projectId);
 }
 
+function setSidebar(open) {
+  els.sidebar.classList.toggle("open", open);
+  els.backdrop.hidden = !open;
+}
+
+function notificationItem(text) {
+  const item = document.createElement("div");
+  item.className = "dropdown-item";
+  item.innerHTML = `<strong>${text}</strong><span>Just now</span>`;
+  return item;
+}
+
 document.addEventListener("click", (event) => {
   const closeBtn = event.target.closest("[data-close]");
   if (closeBtn) {
@@ -377,9 +402,8 @@ document.addEventListener("click", (event) => {
     return;
   }
 
-  const backdrop = event.target.classList.contains("modal-backdrop") ? event.target : null;
-  if (backdrop) {
-    closeModal(backdrop);
+  if (event.target.classList.contains("modal-backdrop")) {
+    closeModal(event.target);
   }
 
   const filterBtn = event.target.closest(".filter-pill");
@@ -390,13 +414,22 @@ document.addEventListener("click", (event) => {
 
   const card = event.target.closest(".project-card");
   if (card) {
-    const projectId = card.dataset.projectId;
-    handleProjectOpen(projectId);
+    handleProjectOpen(card.dataset.projectId);
+  }
+
+  if (!els.notificationDropdown.hidden && !event.target.closest(".notification-wrap")) {
+    els.notificationDropdown.hidden = true;
+    els.notificationBtn.setAttribute("aria-expanded", "false");
   }
 });
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") closeAllModals();
+  if (event.key === "Escape") {
+    closeAllModals();
+    setSidebar(false);
+    els.notificationDropdown.hidden = true;
+    els.notificationBtn.setAttribute("aria-expanded", "false");
+  }
 
   const focusedCard = document.activeElement?.classList?.contains("project-card");
   if ((event.key === "Enter" || event.key === " ") && focusedCard) {
@@ -431,7 +464,6 @@ els.projectForm.addEventListener("submit", (event) => {
   if (!client) return;
 
   const projectId = createProjectId();
-  const invoices = createInvoiceIds(projectId);
   const project = {
     id: projectId,
     name: projectName,
@@ -445,7 +477,7 @@ els.projectForm.addEventListener("submit", (event) => {
     startDate,
     budget,
     team: team.length ? team : [state.teamMembers[0]],
-    invoices,
+    invoices: createInvoiceIds(projectId),
     invoiceBreakdown: [50, 30, 20],
   };
 
@@ -455,7 +487,6 @@ els.projectForm.addEventListener("submit", (event) => {
   state.search = "";
   els.searchInput.value = "";
   renderProjects();
-
   navigateToWorkspace(projectId);
 });
 
@@ -482,6 +513,21 @@ els.clientForm.addEventListener("submit", (event) => {
   closeModal(els.clientModal);
 });
 
+els.notificationBtn.addEventListener("click", () => {
+  const isOpen = !els.notificationDropdown.hidden;
+  els.notificationDropdown.hidden = isOpen;
+  els.notificationBtn.setAttribute("aria-expanded", String(!isOpen));
+});
+
+els.openSidebarBtn.addEventListener("click", () => setSidebar(true));
+els.closeSidebarBtn.addEventListener("click", () => setSidebar(false));
+els.backdrop.addEventListener("click", () => {
+  setSidebar(false);
+  els.notificationDropdown.hidden = true;
+  els.notificationBtn.setAttribute("aria-expanded", "false");
+});
+
+renderNotifications();
 buildClientOptions();
 buildTeamList();
 renderProjects();

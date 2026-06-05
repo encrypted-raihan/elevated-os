@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elevated Web Solutions | People</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">E</div>
+        <div class="brand-text">
+          <div class="brand-title">ELEVATED</div>
+          <div class="brand-subtitle">WEB SOLUTIONS</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a href="#" class="nav-item">Dashboard</a>
+        <a href="#" class="nav-item">Projects</a>
+        <a href="#" class="nav-item active">People</a>
+        <a href="#" class="nav-item">Revenue</a>
+        <a href="#" class="nav-item">Messages</a>
+      </nav>
+
+      <button class="signout-btn">↩ Sign out</button>
+    </aside>
+
+    <main class="main">
+      <header class="page-header">
+        <div class="header-copy">
+          <p class="eyebrow">PEOPLE</p>
+          <h1>Manage clients and team members.</h1>
+          <p class="lead">
+            Keep your project ecosystem organized without turning this into a full HR system.
+          </p>
+        </div>
+
+        <div class="header-actions">
+          <button class="btn btn-ghost" id="newClientBtn">New Client</button>
+          <button class="btn btn-primary" id="newTeamBtn">New Team Member</button>
+        </div>
+      </header>
+
+      <section class="stats-grid" aria-label="People stats">
+        <article class="stat-card">
+          <span class="stat-label">Clients</span>
+          <strong class="stat-value" id="clientsCount">0</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Team Members</span>
+          <strong class="stat-value" id="teamCount">0</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Active People</span>
+          <strong class="stat-value" id="activeCount">0</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Inactive</span>
+          <strong class="stat-value" id="inactiveCount">0</strong>
+        </article>
+      </section>
+
+      <section class="toolbar">
+        <label class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input id="searchInput" type="search" placeholder="Search clients, team, username..." />
+        </label>
+
+        <div class="tabs" role="tablist" aria-label="People sections">
+          <button class="tab active" data-tab="clients">Clients</button>
+          <button class="tab" data-tab="team">Team</button>
+        </div>
+
+        <div class="filters">
+          <span class="filters-label">Filter</span>
+          <div class="segmented" id="filterGroup">
+            <button class="seg-btn active" data-filter="all">All</button>
+            <button class="seg-btn" data-filter="active">Active</button>
+            <button class="seg-btn" data-filter="inactive">Inactive</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="content">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow" id="sectionEyebrow">CLIENTS</p>
+            <h2 id="sectionTitle">Client Directory</h2>
+          </div>
+          <p class="section-note" id="sectionNote">View and manage every client linked to projects.</p>
+        </div>
+
+        <div id="emptyState" class="empty-state hidden">
+          <div class="empty-icon">◌</div>
+          <h3 id="emptyTitle">No Clients Yet</h3>
+          <p id="emptyText">Create your first client to start assigning projects.</p>
+          <button class="btn btn-primary" id="emptyActionBtn">Create Client</button>
+        </div>
+
+        <div id="grid" class="card-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Details Modal -->
+  <div class="modal-overlay hidden" id="detailsModal">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow" id="detailsEyebrow">CLIENT DETAILS</p>
+          <h3 id="detailsTitle">Client Name</h3>
+        </div>
+        <button class="icon-btn close-modal" data-close="detailsModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="detailsBody" class="details-grid"></div>
+        <div class="modal-subsection">
+          <h4 id="relatedTitle">Recent Projects</h4>
+          <div id="relatedList" class="related-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Modal -->
+  <div class="modal-overlay hidden" id="formModal">
+    <div class="modal modal-lg">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow" id="formEyebrow">NEW CLIENT</p>
+          <h3 id="formTitle">Create Client</h3>
+        </div>
+        <button class="icon-btn close-modal" data-close="formModal">✕</button>
+      </div>
+
+      <form id="entityForm" class="form-grid">
+        <input type="hidden" id="formMode" value="client" />
+        <input type="hidden" id="editId" value="" />
+
+        <div class="field">
+          <label for="nameInput">Name</label>
+          <input id="nameInput" type="text" placeholder="ABC Builders" required />
+        </div>
+
+        <div class="field">
+          <label for="usernameInput">Username</label>
+          <input id="usernameInput" type="text" placeholder="abcbuilders" required />
+        </div>
+
+        <div class="field">
+          <label for="passwordInput">Temporary Password</label>
+          <input id="passwordInput" type="text" placeholder="Temp@1234" required />
+        </div>
+
+        <div class="field">
+          <label for="phoneInput">Phone Number</label>
+          <input id="phoneInput" type="tel" placeholder="+91 98765 43210" required />
+        </div>
+
+        <div class="field field-full">
+          <label for="emailInput">Email</label>
+          <input id="emailInput" type="email" placeholder="contact@example.com" required />
+        </div>
+
+        <div class="field field-full" id="roleFieldWrap" style="display:none;">
+          <label for="roleInput">Role</label>
+          <select id="roleInput">
+            <option>Frontend Developer</option>
+            <option>Backend Developer</option>
+            <option>UI Designer</option>
+            <option>SEO Specialist</option>
+            <option>Content Writer</option>
+            <option>Project Manager</option>
+          </select>
+        </div>
+
+        <div class="field field-full form-actions">
+          <button type="button" class="btn btn-ghost close-modal" data-close="formModal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="submitBtn">Create Client</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Modal -->
+  <div class="modal-overlay hidden" id="deleteModal">
+    <div class="modal modal-sm">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow" id="deleteEyebrow">DELETE CLIENT</p>
+          <h3 id="deleteTitle">Delete?</h3>
+        </div>
+        <button class="icon-btn close-modal" data-close="deleteModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="delete-message" id="deleteMessage"></p>
+        <p class="delete-warning" id="deleteWarning"></p>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost close-modal" data-close="deleteModal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

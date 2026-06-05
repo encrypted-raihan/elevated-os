@@ -4,50 +4,100 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Elevated Web Solutions — Projects</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="app-shell">
-    <!-- Sidebar -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
       <div class="brand">
         <div class="brand-mark">
-          <div class="brand-mark-inner">E</div>
+          <img
+            src="../../assets/elevatedlogo.png"
+            alt="Elevated Web Solutions"
+            class="brand-logo"
+          />
         </div>
-        <div class="brand-text">
-          <div class="brand-title">ELEVATED</div>
-          <div class="brand-subtitle">WEB SOLUTIONS</div>
+
+        <div class="brand-content">
+          <h2>ELEVATED</h2>
+          <p>WEB SOLUTIONS</p>
         </div>
+
+        <button class="icon-btn sidebar-close" id="closeSidebar" aria-label="Close sidebar" type="button">
+          <span aria-hidden="true">✕</span>
+        </button>
       </div>
 
-      <nav class="sidebar-nav" aria-label="Primary">
-        <a href="../dashboard/index.html" class="nav-link">Dashboard</a>
-        <a href="#" class="nav-link active" aria-current="page">Projects</a>
-        <a href="../people/index.html" class="nav-link">People</a>
-        <a href="../revenue/index.html" class="nav-link">Revenue</a>
-        <a href="../messages/index.html" class="nav-link">Messages</a>
+      <nav class="nav">
+        <a class="nav-item" href="../dashboard/index.html">
+          <span>Dashboard</span>
+        </a>
+
+        <a class="nav-item active" href="../projects/index.html" aria-current="page">
+          <span>Projects</span>
+        </a>
+
+        <a class="nav-item" href="../people/index.html">
+          <span>People</span>
+        </a>
+
+        <a class="nav-item" href="../revenue/index.html">
+          <span>Revenue</span>
+        </a>
+
+        <a class="nav-item" href="../messages/index.html">
+          <span>Messages</span>
+        </a>
       </nav>
 
       <div class="sidebar-footer">
-        <button class="signout-btn" type="button">↩ Sign out</button>
+        <button class="logout-btn" type="button">
+          <span aria-hidden="true">↩</span>
+          Sign out
+        </button>
       </div>
     </aside>
 
-    <!-- Main -->
+    <div class="backdrop" id="backdrop" hidden></div>
+
     <main class="main">
       <header class="page-header">
-        <div>
-          <div class="eyebrow">ADMIN DASHBOARD</div>
-          <h1>Projects</h1>
-          <p>Manage and track all active client projects.</p>
+        <div class="topbar-left">
+          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar" type="button">
+            <span aria-hidden="true">☰</span>
+          </button>
+
+          <div>
+            <div class="eyebrow">ADMIN DASHBOARD</div>
+            <h1>Projects</h1>
+            <p>Manage and track all active client projects.</p>
+          </div>
         </div>
 
         <div class="header-actions">
           <button class="primary-btn" id="openProjectModalBtn" type="button">+ New Project</button>
-          <button class="icon-btn" type="button" aria-label="Notifications">
-            <span class="bell">🔔</span>
-            <span class="badge">3</span>
-          </button>
+
+          <div class="notification-wrap">
+            <button
+              class="icon-btn"
+              type="button"
+              id="notificationBtn"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-label="Notifications"
+            >
+              <span class="bell">🔔</span>
+              <span class="badge" id="notificationCount">3</span>
+            </button>
+
+            <div class="notification-dropdown" id="notificationDropdown" hidden>
+              <div class="dropdown-title">Notifications</div>
+              <div class="dropdown-list" id="notificationList"></div>
+            </div>
+          </div>
         </div>
       </header>
 

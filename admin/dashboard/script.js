@@ -110,10 +110,7 @@ const openSidebarBtn = document.getElementById("openSidebar");
 const closeSidebarBtn = document.getElementById("closeSidebar");
 const sidebar = document.getElementById("sidebar");
 const backdrop = document.getElementById("backdrop");
-const openSidebarBtn = document.getElementById("openSidebar");
-const closeSidebarBtn = document.getElementById("closeSidebar");
-const sidebar = document.getElementById("sidebar");
-const backdrop = document.getElementById("backdrop");
+
 
 function projectRow(project) {
   const row = document.createElement("div");
