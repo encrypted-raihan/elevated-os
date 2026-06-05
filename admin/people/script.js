@@ -4,9 +4,7 @@ const state = {
   activeTab: 'clients',
   filter: 'all',
   search: '',
-  deleteTarget: null,
-  detailsTarget: null,
-  editTarget: null
+  deleteTarget: null
 };
 
 const clients = [
@@ -128,6 +126,9 @@ const team = [
 ];
 
 const els = {
+  sidebar: document.getElementById('sidebar'),
+  backdrop: document.getElementById('backdrop'),
+  openSidebar: document.getElementById('openSidebar'),
   clientsCount: document.getElementById('clientsCount'),
   teamCount: document.getElementById('teamCount'),
   activeCount: document.getElementById('activeCount'),
@@ -136,7 +137,7 @@ const els = {
   tabs: [...document.querySelectorAll('.tab')],
   segBtns: [...document.querySelectorAll('.seg-btn')],
   grid: document.getElementById('grid'),
-  sectionEyebrow: document.getElementById('sectionEyebrow'),
+  sectionKicker: document.getElementById('sectionKicker'),
   sectionTitle: document.getElementById('sectionTitle'),
   sectionNote: document.getElementById('sectionNote'),
   emptyState: document.getElementById('emptyState'),
@@ -177,14 +178,12 @@ function money(n) {
   return `₹${n.toLocaleString('en-IN')}`;
 }
 
-function getActiveCollection() {
+function getCollection() {
   return state.activeTab === 'clients' ? clients : team;
 }
 
 function getFilteredItems() {
-  const items = getActiveCollection();
-
-  return items.filter(item => {
+  return getCollection().filter(item => {
     const haystack = [
       item.name,
       item.username,
@@ -194,33 +193,25 @@ function getFilteredItems() {
     ].join(' ').toLowerCase();
 
     const matchesSearch = haystack.includes(state.search.toLowerCase());
-    const matchesFilter =
-      state.filter === 'all' ||
-      item.status.toLowerCase() === state.filter;
-
+    const matchesFilter = state.filter === 'all' || item.status.toLowerCase() === state.filter;
     return matchesSearch && matchesFilter;
   });
 }
 
 function updateStats() {
-  const clientCount = clients.length;
-  const teamCount = team.length;
-  const activeCount = [...clients, ...team].filter(item => item.status === 'Active').length;
-  const inactiveCount = [...clients, ...team].filter(item => item.status === 'Inactive').length;
+  const activePeople = [...clients, ...team].filter(item => item.status === 'Active').length;
+  const inactivePeople = [...clients, ...team].filter(item => item.status === 'Inactive').length;
 
-  els.clientsCount.textContent = clientCount;
-  els.teamCount.textContent = teamCount;
-  els.activeCount.textContent = activeCount;
-  els.inactiveCount.textContent = inactiveCount;
+  els.clientsCount.textContent = clients.length;
+  els.teamCount.textContent = team.length;
+  els.activeCount.textContent = activePeople;
+  els.inactiveCount.textContent = inactivePeople;
 }
 
-function renderTabs() {
-  els.tabs.forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.tab === state.activeTab);
-  });
-
+function syncHeaderAndTabs() {
   const isClients = state.activeTab === 'clients';
-  els.sectionEyebrow.textContent = isClients ? 'CLIENTS' : 'TEAM';
+
+  els.sectionKicker.textContent = isClients ? 'Clients' : 'Team';
   els.sectionTitle.textContent = isClients ? 'Client Directory' : 'Team Directory';
   els.sectionNote.textContent = isClients
     ? 'View and manage every client linked to projects.'
@@ -230,10 +221,12 @@ function renderTabs() {
     ? 'Create your first client to start assigning projects.'
     : 'Add your first team member to begin building the team.';
   els.emptyActionBtn.textContent = isClients ? 'Create Client' : 'Add Member';
-  els.formEyebrow.textContent = isClients ? 'NEW CLIENT' : 'NEW TEAM MEMBER';
+  els.formEyebrow.textContent = isClients ? 'New Client' : 'New Team Member';
   els.formTitle.textContent = isClients ? 'Create Client' : 'Add Team Member';
   els.submitBtn.textContent = isClients ? 'Create Client' : 'Add Member';
   els.roleFieldWrap.style.display = isClients ? 'none' : 'block';
+
+  els.tabs.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === state.activeTab));
 }
 
 function renderCards() {
@@ -242,7 +235,6 @@ function renderCards() {
 
   if (!items.length) {
     els.emptyState.classList.remove('hidden');
-    els.grid.innerHTML = '';
     return;
   }
 
@@ -278,9 +270,9 @@ function renderCards() {
       </div>
 
       <div class="card-footer">
-        <button class="pill-btn" data-action="view">View</button>
-        <button class="pill-btn" data-action="edit">Edit</button>
-        <button class="pill-btn pill-btn-danger" data-action="delete">Delete</button>
+        <button class="pill-btn" data-action="view" type="button">View</button>
+        <button class="pill-btn" data-action="edit" type="button">Edit</button>
+        <button class="pill-btn" data-action="delete" type="button">Delete</button>
       </div>
     `;
 
@@ -294,7 +286,7 @@ function renderCards() {
 
 function render() {
   updateStats();
-  renderTabs();
+  syncHeaderAndTabs();
   renderCards();
 }
 
@@ -307,12 +299,11 @@ function closeModal(modalEl) {
 }
 
 function openDetails(id) {
-  state.detailsTarget = id;
-  const item = getActiveCollection().find(x => x.id === id);
+  const item = getCollection().find(x => x.id === id);
   if (!item) return;
 
   const isClient = state.activeTab === 'clients';
-  els.detailsEyebrow.textContent = isClient ? 'CLIENT DETAILS' : 'TEAM DETAILS';
+  els.detailsEyebrow.textContent = isClient ? 'Client Details' : 'Team Details';
   els.detailsTitle.textContent = item.name;
   els.relatedTitle.textContent = isClient ? 'Recent Projects' : 'Projects List';
 
@@ -343,55 +334,54 @@ function openDetails(id) {
     </div>
   `).join('');
 
-  els.relatedList.innerHTML = (item.projectsList || []).map(p => `<span class="related-chip">${p}</span>`).join('') || '<span class="related-chip">No related projects</span>';
+  els.relatedList.innerHTML = (item.projectsList || [])
+    .map(project => `<span class="related-chip">${project}</span>`)
+    .join('') || '<span class="related-chip">No related projects</span>';
 
   openModal(els.detailsModal);
 }
 
 function openForm(mode, id = null) {
-  state.editTarget = id;
   const isClient = state.activeTab === 'clients';
 
   els.formMode.value = isClient ? 'client' : 'team';
+  els.editId.value = id ?? '';
 
   if (mode === 'create') {
-    els.editId.value = '';
     els.nameInput.value = '';
     els.usernameInput.value = '';
     els.passwordInput.value = '';
     els.phoneInput.value = '';
     els.emailInput.value = '';
     els.roleInput.value = 'Frontend Developer';
-    els.formEyebrow.textContent = isClient ? 'NEW CLIENT' : 'NEW TEAM MEMBER';
+    els.formEyebrow.textContent = isClient ? 'New Client' : 'New Team Member';
     els.formTitle.textContent = isClient ? 'Create Client' : 'Add Team Member';
     els.submitBtn.textContent = isClient ? 'Create Client' : 'Add Member';
   } else {
-    const item = getActiveCollection().find(x => x.id === id);
+    const item = getCollection().find(x => x.id === id);
     if (!item) return;
 
-    els.editId.value = String(id);
     els.nameInput.value = item.name;
     els.usernameInput.value = item.username;
     els.passwordInput.value = item.password;
     els.phoneInput.value = item.phone;
     els.emailInput.value = item.email;
     els.roleInput.value = item.role || 'Frontend Developer';
-    els.formEyebrow.textContent = isClient ? 'EDIT CLIENT' : 'EDIT TEAM MEMBER';
+    els.formEyebrow.textContent = isClient ? 'Edit Client' : 'Edit Team Member';
     els.formTitle.textContent = isClient ? 'Edit Client' : 'Edit Team Member';
     els.submitBtn.textContent = isClient ? 'Save Client' : 'Save Member';
   }
 
-  els.roleFieldWrap.style.display = isClient ? 'none' : 'block';
   openModal(els.formModal);
 }
 
 function openDelete(id) {
   state.deleteTarget = id;
-  const item = getActiveCollection().find(x => x.id === id);
+  const item = getCollection().find(x => x.id === id);
   if (!item) return;
 
   const isClient = state.activeTab === 'clients';
-  els.deleteEyebrow.textContent = isClient ? 'DELETE CLIENT' : 'REMOVE TEAM MEMBER';
+  els.deleteEyebrow.textContent = isClient ? 'Delete Client' : 'Delete Team Member';
   els.deleteTitle.textContent = `${isClient ? 'Delete' : 'Remove'} ${item.name}?`;
   els.deleteMessage.textContent = isClient
     ? 'This action cannot be undone.'
@@ -403,52 +393,61 @@ function openDelete(id) {
   openModal(els.deleteModal);
 }
 
-function createOrUpdateFromForm(e) {
-  e.preventDefault();
+function submitForm(event) {
+  event.preventDefault();
 
   const isClient = state.activeTab === 'clients';
   const id = els.editId.value ? Number(els.editId.value) : null;
 
-  const base = {
-    name: els.nameInput.value.trim(),
-    username: els.usernameInput.value.trim(),
-    password: els.passwordInput.value.trim(),
-    phone: els.phoneInput.value.trim(),
-    email: els.emailInput.value.trim(),
-    status: 'Active'
-  };
-
   if (isClient) {
+    const existing = id ? clients.find(x => x.id === id) : null;
     const payload = {
-      ...base,
-      projects: id ? (clients.find(x => x.id === id)?.projects ?? 1) : 0,
-      revenue: id ? (clients.find(x => x.id === id)?.revenue ?? 0) : 0,
-      messages: id ? (clients.find(x => x.id === id)?.messages ?? 0) : 0,
-      createdAt: id ? (clients.find(x => x.id === id)?.createdAt ?? 'Today') : 'Today',
-      projectsList: id ? (clients.find(x => x.id === id)?.projectsList ?? []) : ['New Project']
+      name: els.nameInput.value.trim(),
+      username: els.usernameInput.value.trim(),
+      password: els.passwordInput.value.trim(),
+      phone: els.phoneInput.value.trim(),
+      email: els.emailInput.value.trim(),
+      status: existing?.status || 'Active',
+      projects: existing?.projects ?? 0,
+      revenue: existing?.revenue ?? 0,
+      messages: existing?.messages ?? 0,
+      createdAt: existing?.createdAt ?? 'Today',
+      projectsList: existing?.projectsList ?? []
     };
 
     if (id) {
-      const idx = clients.findIndex(x => x.id === id);
-      clients[idx] = { ...clients[idx], ...payload };
+      const index = clients.findIndex(x => x.id === id);
+      clients[index] = { ...clients[index], ...payload };
     } else {
-      clients.unshift({ id: Date.now(), ...payload, projects: 0, revenue: 0, messages: 0, createdAt: 'Today', projectsList: [] });
+      clients.unshift({
+        id: Date.now(),
+        ...payload
+      });
     }
   } else {
+    const existing = id ? team.find(x => x.id === id) : null;
     const payload = {
-      ...base,
+      name: els.nameInput.value.trim(),
+      username: els.usernameInput.value.trim(),
+      password: els.passwordInput.value.trim(),
+      phone: els.phoneInput.value.trim(),
+      email: els.emailInput.value.trim(),
       role: els.roleInput.value,
-      projects: id ? (team.find(x => x.id === id)?.projects ?? 1) : 0,
-      messages: id ? (team.find(x => x.id === id)?.messages ?? 0) : 0,
-      createdAt: id ? (team.find(x => x.id === id)?.createdAt ?? 'Today') : 'Today',
-      projectsList: id ? (team.find(x => x.id === id)?.projectsList ?? []) : ['New Project']
+      status: existing?.status || 'Active',
+      projects: existing?.projects ?? 0,
+      messages: existing?.messages ?? 0,
+      createdAt: existing?.createdAt ?? 'Today',
+      projectsList: existing?.projectsList ?? []
     };
 
     if (id) {
-      const idx = team.findIndex(x => x.id === id);
-      team[idx] = { ...team[idx], ...payload };
+      const index = team.findIndex(x => x.id === id);
+      team[index] = { ...team[index], ...payload };
     } else {
-      team.unshift({ id: Date.now(), ...payload, projects: 0, messages: 0, createdAt: 'Today', projectsList: [] });
+      team.unshift({
+        id: Date.now(),
+        ...payload
+      });
     }
   }
 
@@ -460,57 +459,64 @@ function confirmDelete() {
   const isClient = state.activeTab === 'clients';
 
   if (isClient) {
-    const idx = clients.findIndex(x => x.id === state.deleteTarget);
-    if (idx !== -1) clients.splice(idx, 1);
+    const index = clients.findIndex(x => x.id === state.deleteTarget);
+    if (index !== -1) clients.splice(index, 1);
   } else {
-    const idx = team.findIndex(x => x.id === state.deleteTarget);
-    if (idx !== -1) team.splice(idx, 1);
+    const index = team.findIndex(x => x.id === state.deleteTarget);
+    if (index !== -1) team.splice(index, 1);
   }
 
   closeModal(els.deleteModal);
   render();
 }
 
-function setupEvents() {
-  els.searchInput.addEventListener('input', e => {
-    state.search = e.target.value.trim();
-    renderCards();
-  });
+function setSidebar(open) {
+  els.sidebar.classList.toggle('open', open);
+  els.backdrop.hidden = !open;
+}
 
+function setupEvents() {
   els.tabs.forEach(btn => {
     btn.addEventListener('click', () => {
       state.activeTab = btn.dataset.tab;
       state.filter = 'all';
-      document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
-      document.querySelector('.seg-btn[data-filter="all"]').classList.add('active');
+      els.segBtns.forEach(seg => seg.classList.toggle('active', seg.dataset.filter === 'all'));
       render();
     });
   });
 
   els.segBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      els.segBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
       state.filter = btn.dataset.filter;
+      els.segBtns.forEach(seg => seg.classList.toggle('active', seg === btn));
       renderCards();
     });
   });
 
+  els.searchInput.addEventListener('input', e => {
+    state.search = e.target.value.trim();
+    renderCards();
+  });
+
   els.newClientBtn.addEventListener('click', () => {
     state.activeTab = 'clients';
+    state.filter = 'all';
+    els.segBtns.forEach(seg => seg.classList.toggle('active', seg.dataset.filter === 'all'));
     render();
     openForm('create');
   });
 
   els.newTeamBtn.addEventListener('click', () => {
     state.activeTab = 'team';
+    state.filter = 'all';
+    els.segBtns.forEach(seg => seg.classList.toggle('active', seg.dataset.filter === 'all'));
     render();
     openForm('create');
   });
 
   els.emptyActionBtn.addEventListener('click', () => openForm('create'));
 
-  els.entityForm.addEventListener('submit', createOrUpdateFromForm);
+  els.entityForm.addEventListener('submit', submitForm);
   els.confirmDeleteBtn.addEventListener('click', confirmDelete);
 
   document.querySelectorAll('.close-modal').forEach(btn => {
@@ -528,8 +534,17 @@ function setupEvents() {
     });
   });
 
+  els.openSidebar.addEventListener('click', () => setSidebar(true));
+  els.backdrop.addEventListener('click', () => {
+    setSidebar(false);
+    closeModal(els.detailsModal);
+    closeModal(els.formModal);
+    closeModal(els.deleteModal);
+  });
+
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
+      setSidebar(false);
       closeModal(els.detailsModal);
       closeModal(els.formModal);
       closeModal(els.deleteModal);

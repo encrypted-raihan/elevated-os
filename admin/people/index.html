@@ -3,92 +3,134 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Elevated Web Solutions | People</title>
+  <title>Elevated Web Solutions Portal — People</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="app-shell">
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
       <div class="brand">
-        <div class="brand-mark">E</div>
-        <div class="brand-text">
-          <div class="brand-title">ELEVATED</div>
-          <div class="brand-subtitle">WEB SOLUTIONS</div>
+        <div class="brand-mark">
+          <img
+            src="../../assets/elevatedlogo.png"
+            alt="Elevated Web Solutions"
+            class="brand-logo"
+          />
+        </div>
+
+        <div class="brand-content">
+          <h2>ELEVATED</h2>
+          <p>WEB SOLUTIONS</p>
         </div>
       </div>
 
       <nav class="nav">
-        <a href="#" class="nav-item">Dashboard</a>
-        <a href="#" class="nav-item">Projects</a>
-        <a href="#" class="nav-item active">People</a>
-        <a href="#" class="nav-item">Revenue</a>
-        <a href="#" class="nav-item">Messages</a>
+        <a class="nav-item" href="../dashboard/index.html">
+          <span>Dashboard</span>
+        </a>
+
+        <a class="nav-item" href="../projects/index.html">
+          <span>Projects</span>
+        </a>
+
+        <a class="nav-item active" href="../people/index.html" aria-current="page">
+          <span>People</span>
+        </a>
+
+        <a class="nav-item" href="../revenue/index.html">
+          <span>Revenue</span>
+        </a>
+
+        <a class="nav-item" href="../messages/index.html">
+          <span>Messages</span>
+        </a>
       </nav>
 
-      <button class="signout-btn">↩ Sign out</button>
+      <div class="sidebar-footer">
+        <button class="logout-btn" type="button">
+          <span aria-hidden="true">↩</span>
+          Sign out
+        </button>
+      </div>
     </aside>
 
+    <div class="backdrop" id="backdrop" hidden></div>
+
     <main class="main">
-      <header class="page-header">
-        <div class="header-copy">
-          <p class="eyebrow">PEOPLE</p>
-          <h1>Manage clients and team members.</h1>
-          <p class="lead">
-            Keep your project ecosystem organized without turning this into a full HR system.
-          </p>
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar">
+            <span aria-hidden="true">☰</span>
+          </button>
+
+          <div>
+            <p class="eyebrow">People</p>
+            <h1>Manage clients and team members.</h1>
+            <p class="subtext">Keep the portal focused on people involved in projects, not HR.</p>
+          </div>
         </div>
 
-        <div class="header-actions">
-          <button class="btn btn-ghost" id="newClientBtn">New Client</button>
-          <button class="btn btn-primary" id="newTeamBtn">New Team Member</button>
+        <div class="topbar-right">
+          <button class="new-project-btn" id="newClientBtn" type="button">+ New Client</button>
+          <button class="new-project-btn secondary" id="newTeamBtn" type="button">+ New Team Member</button>
         </div>
       </header>
 
-      <section class="stats-grid" aria-label="People stats">
+      <section class="stats-grid" aria-label="People overview">
         <article class="stat-card">
-          <span class="stat-label">Clients</span>
-          <strong class="stat-value" id="clientsCount">0</strong>
+          <p class="stat-title">Clients</p>
+          <h2 id="clientsCount">0</h2>
+          <p class="stat-sub">All client accounts</p>
         </article>
+
         <article class="stat-card">
-          <span class="stat-label">Team Members</span>
-          <strong class="stat-value" id="teamCount">0</strong>
+          <p class="stat-title">Team Members</p>
+          <h2 id="teamCount">0</h2>
+          <p class="stat-sub">Internal team profiles</p>
         </article>
+
         <article class="stat-card">
-          <span class="stat-label">Active People</span>
-          <strong class="stat-value" id="activeCount">0</strong>
+          <p class="stat-title">Active People</p>
+          <h2 id="activeCount">0</h2>
+          <p class="stat-sub">Currently active accounts</p>
         </article>
+
         <article class="stat-card">
-          <span class="stat-label">Inactive</span>
-          <strong class="stat-value" id="inactiveCount">0</strong>
+          <p class="stat-title">Inactive</p>
+          <h2 id="inactiveCount">0</h2>
+          <p class="stat-sub">Archived or paused</p>
         </article>
       </section>
 
       <section class="toolbar">
-        <label class="search-wrap">
+        <label class="search-wrap" aria-label="Search people">
           <span class="search-icon">⌕</span>
-          <input id="searchInput" type="search" placeholder="Search clients, team, username..." />
+          <input id="searchInput" type="search" placeholder="Search client name, team name, username..." />
         </label>
 
-        <div class="tabs" role="tablist" aria-label="People sections">
-          <button class="tab active" data-tab="clients">Clients</button>
-          <button class="tab" data-tab="team">Team</button>
+        <div class="tabs" role="tablist" aria-label="People tabs">
+          <button class="tab active" data-tab="clients" type="button">Clients</button>
+          <button class="tab" data-tab="team" type="button">Team</button>
         </div>
 
         <div class="filters">
           <span class="filters-label">Filter</span>
           <div class="segmented" id="filterGroup">
-            <button class="seg-btn active" data-filter="all">All</button>
-            <button class="seg-btn" data-filter="active">Active</button>
-            <button class="seg-btn" data-filter="inactive">Inactive</button>
+            <button class="seg-btn active" data-filter="all" type="button">All</button>
+            <button class="seg-btn" data-filter="active" type="button">Active</button>
+            <button class="seg-btn" data-filter="inactive" type="button">Inactive</button>
           </div>
         </div>
       </section>
 
-      <section class="content">
-        <div class="section-head">
+      <section class="panel">
+        <div class="panel-header">
           <div>
-            <p class="eyebrow" id="sectionEyebrow">CLIENTS</p>
-            <h2 id="sectionTitle">Client Directory</h2>
+            <p class="section-kicker" id="sectionKicker">Clients</p>
+            <h3 id="sectionTitle">Client Directory</h3>
           </div>
           <p class="section-note" id="sectionNote">View and manage every client linked to projects.</p>
         </div>
@@ -97,7 +139,7 @@
           <div class="empty-icon">◌</div>
           <h3 id="emptyTitle">No Clients Yet</h3>
           <p id="emptyText">Create your first client to start assigning projects.</p>
-          <button class="btn btn-primary" id="emptyActionBtn">Create Client</button>
+          <button class="new-project-btn" id="emptyActionBtn" type="button">Create Client</button>
         </div>
 
         <div id="grid" class="card-grid"></div>
@@ -105,18 +147,19 @@
     </main>
   </div>
 
-  <!-- Details Modal -->
-  <div class="modal-overlay hidden" id="detailsModal">
+  <div class="modal-overlay hidden" id="detailsModal" role="dialog" aria-modal="true" aria-labelledby="detailsTitle">
     <div class="modal">
       <div class="modal-head">
         <div>
-          <p class="eyebrow" id="detailsEyebrow">CLIENT DETAILS</p>
+          <p class="eyebrow" id="detailsEyebrow">Client Details</p>
           <h3 id="detailsTitle">Client Name</h3>
         </div>
-        <button class="icon-btn close-modal" data-close="detailsModal">✕</button>
+        <button class="icon-btn close-modal" data-close="detailsModal" aria-label="Close details">✕</button>
       </div>
+
       <div class="modal-body">
         <div id="detailsBody" class="details-grid"></div>
+
         <div class="modal-subsection">
           <h4 id="relatedTitle">Recent Projects</h4>
           <div id="relatedList" class="related-list"></div>
@@ -125,15 +168,14 @@
     </div>
   </div>
 
-  <!-- Form Modal -->
-  <div class="modal-overlay hidden" id="formModal">
+  <div class="modal-overlay hidden" id="formModal" role="dialog" aria-modal="true" aria-labelledby="formTitle">
     <div class="modal modal-lg">
       <div class="modal-head">
         <div>
-          <p class="eyebrow" id="formEyebrow">NEW CLIENT</p>
+          <p class="eyebrow" id="formEyebrow">New Client</p>
           <h3 id="formTitle">Create Client</h3>
         </div>
-        <button class="icon-btn close-modal" data-close="formModal">✕</button>
+        <button class="icon-btn close-modal" data-close="formModal" aria-label="Close form">✕</button>
       </div>
 
       <form id="entityForm" class="form-grid">
@@ -185,15 +227,14 @@
     </div>
   </div>
 
-  <!-- Delete Modal -->
-  <div class="modal-overlay hidden" id="deleteModal">
+  <div class="modal-overlay hidden" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteTitle">
     <div class="modal modal-sm">
       <div class="modal-head">
         <div>
-          <p class="eyebrow" id="deleteEyebrow">DELETE CLIENT</p>
+          <p class="eyebrow" id="deleteEyebrow">Delete Client</p>
           <h3 id="deleteTitle">Delete?</h3>
         </div>
-        <button class="icon-btn close-modal" data-close="deleteModal">✕</button>
+        <button class="icon-btn close-modal" data-close="deleteModal" aria-label="Close delete dialog">✕</button>
       </div>
       <div class="modal-body">
         <p class="delete-message" id="deleteMessage"></p>
