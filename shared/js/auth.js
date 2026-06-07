@@ -12,36 +12,22 @@ const db = window.supabaseClient;
    LOGIN
 ========================================= */
 
-async function login(username, password) {
+async function login(email, password) {
 
-    console.log("Username received:", username);
+    const { data, error } =
+        await db.auth.signInWithPassword({
 
-    const { data: profile, error: profileError } = await db
-        .from("profiles")
-        .select("email")
-        .eq("username", username)
-        .single();
+            email: email,
+            password: password
 
-    console.log("Profile:", profile);
-    console.log("Profile Error:", profileError);
-
-    if (profileError || !profile) {
-        throw new Error("Invalid username");
-    }
-
-    const { data, error } = await db.auth.signInWithPassword({
-        email: profile.email,
-        password: password
-    });
-
-    console.log("Login:", data);
-    console.log("Login Error:", error);
+        });
 
     if (error) {
         throw error;
     }
 
     return data.user;
+
 }
 
 /* =========================================

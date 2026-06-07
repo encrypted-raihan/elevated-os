@@ -1,11 +1,6 @@
 -- =====================================================
 -- ELEVATED WEB SOLUTIONS PORTAL
 -- RLS POLICIES V1
--- Run this after schema.sql and seed.sql.
--- =====================================================
-
--- =====================================================
--- ENABLE RLS
 -- =====================================================
 
 alter table public.profiles enable row level security;
@@ -91,15 +86,6 @@ using (
     auth.uid() = id or public.is_admin()
 );
 
-drop policy if exists "profiles_insert_admin_only" on public.profiles;
-create policy "profiles_insert_admin_only"
-on public.profiles
-for insert
-to authenticated
-with check (
-    public.is_admin()
-);
-
 drop policy if exists "profiles_update_own_or_admin" on public.profiles;
 create policy "profiles_update_own_or_admin"
 on public.profiles
@@ -110,6 +96,15 @@ using (
 )
 with check (
     auth.uid() = id or public.is_admin()
+);
+
+drop policy if exists "profiles_insert_admin_only" on public.profiles;
+create policy "profiles_insert_admin_only"
+on public.profiles
+for insert
+to authenticated
+with check (
+    public.is_admin()
 );
 
 drop policy if exists "profiles_delete_admin_only" on public.profiles;
@@ -168,8 +163,8 @@ using (
 -- PROJECT MEMBERS
 -- =====================================================
 
-drop policy if exists "project_members_select_own_or_admin" on public.project_members;
-create policy "project_members_select_own_or_admin"
+drop policy if exists "project_members_select_access" on public.project_members;
+create policy "project_members_select_access"
 on public.project_members
 for select
 to authenticated
@@ -222,8 +217,8 @@ using (
     public.has_project_access(project_id)
 );
 
-drop policy if exists "project_updates_insert_admin_or_member" on public.project_updates;
-create policy "project_updates_insert_admin_or_member"
+drop policy if exists "project_updates_insert_member_or_admin" on public.project_updates;
+create policy "project_updates_insert_member_or_admin"
 on public.project_updates
 for insert
 to authenticated

@@ -1,9 +1,9 @@
 const form = document.getElementById("loginForm");
 
-const username = document.getElementById("username");
+const email = document.getElementById("email");
 const password = document.getElementById("password");
 
-const usernameError = document.getElementById("usernameError");
+const emailError =document.getElementById("emailError");
 const passwordError = document.getElementById("passwordError");
 const loginError = document.getElementById("loginError");
 
@@ -48,7 +48,7 @@ form.addEventListener("submit", async (e) => {
 
     e.preventDefault();
 
-    usernameError.textContent = "";
+    emailError.textContent = "";
     passwordError.textContent = "";
     loginError.textContent = "";
 
@@ -56,12 +56,14 @@ form.addEventListener("submit", async (e) => {
 
     /* Username Validation */
 
-    if (username.value.trim() === "") {
+if (email.value.trim() === "") {
 
-        usernameError.textContent = "Username is required";
+    emailError.textContent =
+        "Email is required";
 
-        valid = false;
-    }
+    valid = false;
+
+}
 
     /* Password Validation */
 
@@ -74,7 +76,7 @@ form.addEventListener("submit", async (e) => {
 
     if (!valid) return;
 
-    const user = username.value.trim();
+    const userEmail = email.value.trim();
     const pass = password.value.trim();
 
 loginBtn.disabled = true;
@@ -82,7 +84,7 @@ loginBtn.textContent = "Signing In...";
 
 try {
 
-    await login(user, pass);
+    await login(userEmail, pass);
 
     const profile = await getProfile();
 
@@ -116,7 +118,7 @@ try {
 catch (error) {
 
     loginError.textContent =
-        error.message || "Invalid username or password";
+        error.message || "Invalid email or password";
 
 }
 finally {
