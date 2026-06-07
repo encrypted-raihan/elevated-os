@@ -44,7 +44,7 @@ togglePassword.addEventListener("click", () => {
    LOGIN FORM
 ========================================== */
 
-form.addEventListener("submit", (e) => {
+form.addEventListener("submit", async (e) => {
 
     e.preventDefault();
 
@@ -77,32 +77,53 @@ form.addEventListener("submit", (e) => {
     const user = username.value.trim();
     const pass = password.value.trim();
 
-    /* Admin */
+loginBtn.disabled = true;
+loginBtn.textContent = "Signing In...";
 
-    if (user === "admin" && pass === "admin123") {
+try {
 
-        window.location.href = "../admin/dashboard/index.html";
-        return;
+    await login(user, pass);
+
+    const profile = await getProfile();
+
+    if (!profile) {
+        throw new Error("Profile not found");
     }
 
-    /* Client */
+    switch (profile.role) {
 
-    if (user === "client" && pass === "client123") {
+        case "admin":
+            window.location.href =
+                "../admin/dashboard/index.html";
+            break;
 
-        window.location.href = "../client/dashboard/index.html";
-        return;
+        case "team":
+            window.location.href =
+                "../team/dashboard/index.html";
+            break;
+
+        case "client":
+            window.location.href =
+                "../client/dashboard/index.html";
+            break;
+
+        default:
+            loginError.textContent =
+                "Invalid account role";
     }
 
-    /* Team */
+}
+catch (error) {
 
-    if (user === "team" && pass === "team123") {
+    loginError.textContent =
+        error.message || "Invalid username or password";
 
-        window.location.href = "../team/dashboard/index.html";
-        return;
-    }
+}
+finally {
 
-    /* Invalid */
+    loginBtn.disabled = false;
+    loginBtn.textContent = "Sign In";
 
-    loginError.textContent = "Invalid username or password";
+}
 
 });
