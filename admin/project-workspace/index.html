@@ -70,25 +70,22 @@
             <span aria-hidden="true">☰</span>
           </button>
 
-      <div class="header-content">
+          <div class="header-content">
+            <a href="../projects/index.html" class="back-btn">
+              <span>←</span>
+              <span>Back to Projects</span>
+            </a>
 
-  <a href="../projects/index.html" class="back-btn">
-    <span>←</span>
-    <span>Back to Projects</span>
-  </a>
-
-  <div class="eyebrow">PROJECT WORKSPACE</div>
-
-  <h1 id="projectName">Loading...</h1>
-
-  <div class="meta-line" id="projectMeta">—</div>
-
-</div>
+            <div class="eyebrow">PROJECT WORKSPACE</div>
+            <h1 id="projectName">Loading...</h1>
+            <div class="meta-line" id="projectMeta">—</div>
+          </div>
+        </div>
 
         <div class="topbar-actions">
-          <button class="btn btn-ghost" id="editBtn">Edit Project</button>
-          <button class="btn btn-ghost" id="archiveBtn">Archive Project</button>
-          <button class="btn btn-danger" id="deleteBtn">Delete Project</button>
+          <button class="btn btn-ghost" id="editBtn" type="button">Edit Project</button>
+          <button class="btn btn-ghost" id="archiveBtn" type="button">Archive Project</button>
+          <button class="btn btn-danger" id="deleteBtn" type="button">Delete Project</button>
         </div>
       </header>
 
@@ -120,13 +117,13 @@
 
       <section class="workspace-card">
         <div class="tabs" id="tabs">
-          <button class="tab active" data-tab="overview">Overview</button>
-          <button class="tab" data-tab="timeline">Timeline</button>
-          <button class="tab" data-tab="files">Files</button>
-          <button class="tab" data-tab="payments">Payments</button>
-          <button class="tab" data-tab="messages">Messages</button>
-          <button class="tab" data-tab="updates">Updates</button>
-          <button class="tab" data-tab="team">Team</button>
+          <button class="tab active" data-tab="overview" type="button">Overview</button>
+          <button class="tab" data-tab="timeline" type="button">Timeline</button>
+          <button class="tab" data-tab="files" type="button">Files</button>
+          <button class="tab" data-tab="payments" type="button">Payments</button>
+          <button class="tab" data-tab="messages" type="button">Messages</button>
+          <button class="tab" data-tab="updates" type="button">Updates</button>
+          <button class="tab" data-tab="team" type="button">Team</button>
         </div>
 
         <div class="tab-panel active" id="overview">
@@ -142,34 +139,42 @@
               <div class="detail-label">Project Name</div>
               <div class="detail-value" id="detailName">—</div>
             </div>
+
             <div class="detail-card">
               <div class="detail-label">Description</div>
               <div class="detail-value detail-text" id="detailDescription">—</div>
             </div>
+
             <div class="detail-card">
               <div class="detail-label">Client</div>
               <div class="detail-value" id="detailClient">—</div>
             </div>
+
             <div class="detail-card">
               <div class="detail-label">Project ID</div>
               <div class="detail-value" id="detailId">—</div>
             </div>
+
             <div class="detail-card">
               <div class="detail-label">Status</div>
               <div class="detail-value" id="detailStatus">—</div>
             </div>
+
             <div class="detail-card">
               <div class="detail-label">Start Date</div>
               <div class="detail-value" id="detailStartDate">—</div>
             </div>
+
             <div class="detail-card">
               <div class="detail-label">Due Date</div>
               <div class="detail-value" id="detailDueDate">—</div>
             </div>
+
             <div class="detail-card">
               <div class="detail-label">Current Phase</div>
               <div class="detail-value" id="detailPhase">—</div>
             </div>
+
             <div class="detail-card">
               <div class="detail-label">Budget</div>
               <div class="detail-value" id="detailBudget">—</div>
@@ -208,7 +213,7 @@
               <div class="section-kicker">FILES</div>
               <h2>Project Files</h2>
             </div>
-            <button class="btn btn-primary" id="uploadBtn">Upload File</button>
+            <button class="btn btn-primary" id="uploadBtn" type="button">Upload File</button>
             <input type="file" id="fileInput" hidden />
           </div>
 
@@ -221,7 +226,7 @@
               <div class="section-kicker">PAYMENTS</div>
               <h2>Billing and Invoices</h2>
             </div>
-            <button class="btn btn-ghost" id="generatePdfBtn">Generate Invoice PDF</button>
+            <button class="btn btn-ghost" id="generatePdfBtn" type="button">Generate Invoice PDF</button>
           </div>
 
           <div class="payment-summary">
@@ -266,7 +271,7 @@
               <div class="section-kicker">UPDATES</div>
               <h2>Project Log</h2>
             </div>
-            <button class="btn btn-primary" id="addUpdateBtn">Add Update</button>
+            <button class="btn btn-primary" id="addUpdateBtn" type="button">Add Update</button>
           </div>
 
           <div class="updates-list" id="updatesList"></div>
@@ -278,7 +283,7 @@
               <div class="section-kicker">TEAM</div>
               <h2>Assigned Members</h2>
             </div>
-            <button class="btn btn-primary" id="addMemberBtn">Add Member</button>
+            <button class="btn btn-primary" id="addMemberBtn" type="button">Add Member</button>
           </div>
 
           <div class="team-list" id="teamList"></div>
@@ -293,8 +298,8 @@
     <h3 id="deleteTitle">Delete Project?</h3>
     <p id="deleteText">This action cannot be undone.</p>
     <div class="modal-actions">
-      <button class="btn btn-ghost" id="cancelDelete">Cancel</button>
-      <button class="btn btn-danger" id="confirmDelete">Delete</button>
+      <button class="btn btn-ghost" id="cancelDelete" type="button">Cancel</button>
+      <button class="btn btn-danger" id="confirmDelete" type="button">Delete</button>
     </div>
   </div>
 
@@ -303,11 +308,11 @@
     <p id="promptText">Enter details below.</p>
     <input type="text" id="promptInput" class="modal-input" />
     <div class="modal-actions">
-      <button class="btn btn-ghost" id="cancelPrompt">Cancel</button>
-      <button class="btn btn-primary" id="confirmPrompt">Save</button>
+      <button class="btn btn-ghost" id="cancelPrompt" type="button">Cancel</button>
+      <button class="btn btn-primary" id="confirmPrompt" type="button">Save</button>
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
