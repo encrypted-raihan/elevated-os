@@ -1,814 +1,829 @@
-"use strict";
+import { auth, db } from "../../js/firebase.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+import {
+  collection,
+  doc,
+  getDoc,
+  onSnapshot,
+  orderBy,
+  limit,
+  query,
+  serverTimestamp,
+  updateDoc,
+  where,
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-/*
-==================================================
-ELEVATED OS — ADMIN DASHBOARD
-Supabase-powered dashboard with no hardcoded demo data
-==================================================
-*/
+const LOGIN_ROUTE = "/index/index.html";
+const ROLE_REDIRECTS = {
+  admin: "/admin/dashboard/index.html",
+  manager: "/team/dashboard/index.html",
+  developer: "/team/dashboard/index.html",
+  client: "/client/dashboard/index.html",
+};
 
-(() => {
-  const db = window.supabaseClient;
+const ACTIVE_PROJECT_STATUSES = new Set(["planning", "active", "review", "paused"]);
+const TEAM_ROLES = new Set(["admin", "manager", "developer"]);
 
-  if (!db) {
-    console.error("Supabase client is not initialized. Check shared/js/supabase.js and the Supabase SDK script order.");
+const currencyFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+
+const shortDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+});
+
+const els = {
+  projectsTable: document.getElementById("projectsTable"),
+  messageList: document.getElementById("messageList"),
+  activityList: document.getElementById("activityList"),
+  notificationList: document.getElementById("notificationList"),
+  notificationBtn: document.getElementById("notificationBtn"),
+  notificationDropdown: document.getElementById("notificationDropdown"),
+  notificationCount: document.getElementById("notificationCount"),
+  openSidebarBtn: document.getElementById("openSidebar"),
+  sidebar: document.getElementById("sidebar"),
+  backdrop: document.getElementById("backdrop"),
+  logoutBtn: document.querySelector(".logout-btn"),
+  newProjectBtn: document.getElementById("newProjectBtn"),
+  welcomeHeading: document.querySelector(".topbar h1"),
+  topbarSubtext: document.querySelector(".topbar .subtext"),
+  statCards: Array.from(document.querySelectorAll(".stat-card")),
+};
+
+const state = {
+  user: null,
+  profile: null,
+  users: [],
+  projects: [],
+  invoices: [],
+  messages: [],
+  activity: [],
+  notifications: [],
+  usersById: new Map(),
+  projectsById: new Map(),
+  unsubscribe: [],
+  ready: false,
+};
+
+document.addEventListener("DOMContentLoaded", initDashboard);
+
+function initDashboard() {
+  bindStaticUi();
+  showLoadingState();
+
+  onAuthStateChanged(auth, async (user) => {
+    await handleAuthChange(user);
+  });
+}
+
+async function handleAuthChange(user) {
+  teardownListeners();
+  state.user = user;
+  state.profile = null;
+  state.ready = false;
+
+  if (!user) {
+    window.location.href = LOGIN_ROUTE;
     return;
   }
 
-  // -------------------------------------------------
-  // Element references
-  // -------------------------------------------------
-  const els = {
-    projectsTable: document.getElementById("projectsTable"),
-    messageList: document.getElementById("messageList"),
-    activityList: document.getElementById("activityList"),
-    notificationList: document.getElementById("notificationList"),
-    notificationBtn: document.getElementById("notificationBtn"),
-    notificationDropdown: document.getElementById("notificationDropdown"),
-    notificationCount: document.getElementById("notificationCount"),
-    openSidebarBtn: document.getElementById("openSidebar"),
-    sidebar: document.getElementById("sidebar"),
-    backdrop: document.getElementById("backdrop"),
-    logoutBtn: document.querySelector(".logout-btn"),
-    welcomeHeading: document.querySelector(".topbar h1"),
-    statCards: Array.from(document.querySelectorAll(".stat-card")),
-  };
+  try {
+    const profile = await loadUserProfile(user.uid);
 
-  const ACTIVE_PROJECT_STATUSES = ["planning", "design", "development", "testing", "review"];
-  const ROLE_REDIRECTS = {
-    admin: "/admin/dashboard/index.html",
-    team: "/team/dashboard/index.html",
-    client: "/client/dashboard/index.html",
-  };
-
-  const currencyFormatter = new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  });
-
-  const shortDateFormatter = new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-
-  // -------------------------------------------------
-  // Boot
-  // -------------------------------------------------
-  document.addEventListener("DOMContentLoaded", initDashboard);
-
-  async function initDashboard() {
-    bindStaticUi();
-
-    const profile = await requireAdminSession();
-    if (!profile) return;
-
-    setWelcomeName(profile.full_name || "Admin");
-    setAllLoadingStates();
-
-    await Promise.all([
-      loadStats(),
-      loadProjects(),
-      loadMessages(),
-      loadNotifications(),
-      loadActivity(),
-    ]);
-  }
-
-  // -------------------------------------------------
-  // Auth / access control
-  // -------------------------------------------------
-  async function requireAdminSession() {
-    try {
-      const { data: authData, error: authError } = await db.auth.getUser();
-
-      if (authError || !authData?.user) {
-        window.location.href = "/index/index.html";
-        return null;
-      }
-
-      const { data: profile, error: profileError } = await db
-        .from("profiles")
-        .select("id, full_name, role, status")
-        .eq("id", authData.user.id)
-        .single();
-
-      if (profileError || !profile) {
-        await safeSignOut();
-        window.location.href = "/index/index.html";
-        return null;
-      }
-
-      if (profile.status && profile.status !== "active") {
-        await safeSignOut();
-        window.location.href = "/index/index.html";
-        return null;
-      }
-
-      if (profile.role !== "admin") {
-        window.location.href = ROLE_REDIRECTS[profile.role] || "/index/index.html";
-        return null;
-      }
-
-      return profile;
-    } catch (error) {
-      console.error("Session validation failed:", error);
-      window.location.href = "/index/index.html";
-      return null;
+    if (!profile) {
+      await safeSignOut();
+      window.location.href = LOGIN_ROUTE;
+      return;
     }
-  }
 
-  async function safeSignOut() {
+    if (profile.active === false) {
+      await safeSignOut();
+      window.location.href = LOGIN_ROUTE;
+      return;
+    }
+
+    const role = normalizeText(profile.role);
+    if (role !== "admin") {
+      await safeSignOut();
+      window.location.href = ROLE_REDIRECTS[role] || LOGIN_ROUTE;
+      return;
+    }
+
+    state.profile = profile;
+    setWelcomeName(getDisplayName(profile));
+    setTopbarSubtitle("Connecting to Firebase…");
+
     try {
-      await db.auth.signOut();
+      await updateDoc(doc(db, "users", user.uid), {
+        lastLogin: serverTimestamp(),
+      });
     } catch {
-      // Ignore sign-out errors during redirect fallback.
+      // Non-blocking. Dashboard still works if lastLogin update fails.
     }
+
+    state.ready = true;
+    startRealtimeListeners(user.uid);
+  } catch (error) {
+    console.error("Failed to initialize dashboard:", error);
+    await safeSignOut();
+    window.location.href = LOGIN_ROUTE;
   }
+}
 
-  function setWelcomeName(fullName) {
-    if (!els.welcomeHeading) return;
-    els.welcomeHeading.textContent = `Welcome Back, ${fullName}`;
-  }
-
-  // -------------------------------------------------
-  // UI wiring
-  // -------------------------------------------------
-  function bindStaticUi() {
-    if (els.logoutBtn) {
-      els.logoutBtn.addEventListener("click", async () => {
-        if (typeof window.logout === "function") {
-          await window.logout();
-          return;
-        }
-        await safeSignOut();
-        window.location.href = "/index/index.html";
-      });
-    }
-
-    if (els.notificationBtn && els.notificationDropdown) {
-      els.notificationBtn.addEventListener("click", (event) => {
-        event.stopPropagation();
-        const willOpen = els.notificationDropdown.hidden;
-        els.notificationDropdown.hidden = !willOpen;
-        els.notificationBtn.setAttribute("aria-expanded", String(willOpen));
-      });
-    }
-
-    if (els.openSidebarBtn && els.sidebar && els.backdrop) {
-      els.openSidebarBtn.addEventListener("click", () => setSidebar(true));
-      els.backdrop.addEventListener("click", () => {
-        setSidebar(false);
-        closeNotifications();
-      });
-    }
-
-    document.addEventListener("click", (event) => {
-      if (!els.notificationDropdown || els.notificationDropdown.hidden) return;
-      if (!event.target.closest(".notification-wrap")) {
-        closeNotifications();
-      }
-    });
-
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        setSidebar(false);
-        closeNotifications();
-      }
+function bindStaticUi() {
+  if (els.logoutBtn) {
+    els.logoutBtn.addEventListener("click", async () => {
+      await safeSignOut();
+      window.location.href = LOGIN_ROUTE;
     });
   }
 
-  function setSidebar(open) {
-    if (!els.sidebar || !els.backdrop) return;
-    els.sidebar.classList.toggle("open", open);
-    els.backdrop.hidden = !open;
-  }
-
-  function closeNotifications() {
-    if (!els.notificationDropdown || !els.notificationBtn) return;
-    els.notificationDropdown.hidden = true;
-    els.notificationBtn.setAttribute("aria-expanded", "false");
-  }
-
-  // -------------------------------------------------
-  // Loading states
-  // -------------------------------------------------
-  function setAllLoadingStates() {
-    setStatLoading();
-    renderProjectTableState("Loading recent projects…");
-    renderListState(els.messageList, "Loading recent messages…");
-    renderListState(els.activityList, "Loading recent activity…");
-    renderNotificationsState("Loading notifications…");
-  }
-
-  function setStatLoading() {
-    els.statCards.forEach((card) => {
-      const value = card.querySelector("h2");
-      const sub = card.querySelector(".stat-sub");
-      if (value) value.textContent = "—";
-      if (sub) sub.textContent = "Loading…";
+  if (els.newProjectBtn) {
+    els.newProjectBtn.addEventListener("click", () => {
+      window.location.href = "../projects/index.html";
     });
   }
 
-  function setStatCard(index, value, subtitle) {
-    const card = els.statCards[index];
-    if (!card) return;
-
-    const valueEl = card.querySelector("h2");
-    const subEl = card.querySelector(".stat-sub");
-
-    if (valueEl) valueEl.textContent = value;
-    if (subEl) subEl.textContent = subtitle;
-  }
-
-  // -------------------------------------------------
-  // Dashboard loaders
-  // -------------------------------------------------
-  async function loadStats() {
-    try {
-      const now = new Date();
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-
-      const activeProjectsPromise = countRows("projects", (query) =>
-        query.in("status", ACTIVE_PROJECT_STATUSES)
-      );
-
-      const pendingPaymentsPromise = countRows("invoices", (query) =>
-        query.eq("status", "pending")
-      );
-
-      const pendingReviewsPromise = countRows("projects", (query) =>
-        query.eq("status", "review")
-      );
-
-      const revenuePromise = db
-        .from("invoices")
-        .select("amount, created_at")
-        .eq("status", "paid")
-        .gte("created_at", monthStart.toISOString())
-        .lt("created_at", monthEnd.toISOString())
-        .order("created_at", { ascending: false });
-
-      const [
-        activeProjectsResult,
-        pendingPaymentsResult,
-        pendingReviewsResult,
-        revenueResult,
-      ] = await Promise.allSettled([
-        activeProjectsPromise,
-        pendingPaymentsPromise,
-        pendingReviewsPromise,
-        revenuePromise,
-      ]);
-
-      const activeProjects =
-        activeProjectsResult.status === "fulfilled" ? activeProjectsResult.value : null;
-      const pendingPayments =
-        pendingPaymentsResult.status === "fulfilled" ? pendingPaymentsResult.value : null;
-      const pendingReviews =
-        pendingReviewsResult.status === "fulfilled" ? pendingReviewsResult.value : null;
-
-      let revenueThisMonth = null;
-      if (revenueResult.status === "fulfilled") {
-        const { data, error } = revenueResult.value;
-        if (!error) {
-          revenueThisMonth = (data || []).reduce((sum, row) => {
-            return sum + Number(row.amount || 0);
-          }, 0);
-        }
-      }
-
-      setStatCard(
-        0,
-        activeProjects === null ? "—" : formatNumber(activeProjects),
-        activeProjects === null ? "Unable to load metric" : "Currently running projects"
-      );
-
-      setStatCard(
-        1,
-        revenueThisMonth === null ? "—" : formatCurrency(revenueThisMonth),
-        revenueThisMonth === null ? "Unable to load metric" : "Collected revenue"
-      );
-
-      setStatCard(
-        2, 
-        pendingPayments === null ? "—" : formatNumber(pendingPayments),
-        pendingPayments === null ? "Unable to load metric" : "Invoices awaiting payment"
-      );
-
-      setStatCard(
-        3,
-        pendingReviews === null ? "—" : formatNumber(pendingReviews),
-        pendingReviews === null ? "Unable to load metric" : "Waiting for client approval"
-      );
-    } catch (error) {
-      console.error("Failed to load dashboard stats:", error);
-      // Keep the rest of the dashboard alive even if stats fail.
-      setStatCard(0, "—", "Unable to load metric");
-      setStatCard(1, "—", "Unable to load metric");
-      setStatCard(2, "—", "Unable to load metric");
-      setStatCard(3, "—", "Unable to load metric");
-    }
-  }
-
-  async function loadProjects() {
-    try {
-      const { data: projects, error } = await db
-        .from("projects")
-        .select("id, project_code, name, client_id, status, progress, due_date, created_at")
-        .order("created_at", { ascending: false })
-        .limit(6);
-
-      if (error) throw error;
-
-      const projectRows = projects || [];
-      if (projectRows.length === 0) {
-        renderProjectTableState("No projects available");
-        return;
-      }
-
-      const clientIds = unique(
-        projectRows.map((project) => project.client_id).filter(Boolean)
-      );
-
-      const clientMap = await fetchProfileMap(clientIds);
-
-      renderProjectsTable(projectRows, clientMap);
-    } catch (error) {
-      console.error("Failed to load projects:", error);
-      renderProjectTableState("Unable to load projects");
-    }
-  }
-
-  async function loadMessages() {
-    try {
-      const { data: messages, error } = await db
-        .from("messages")
-        .select("id, project_id, sender_id, message, created_at")
-        .order("created_at", { ascending: false })
-        .limit(5);
-
-      if (error) throw error;
-
-      const messageRows = messages || [];
-      if (messageRows.length === 0) {
-        renderListState(els.messageList, "No messages available");
-        return;
-      }
-
-      const senderIds = unique(messageRows.map((message) => message.sender_id).filter(Boolean));
-      const projectIds = unique(messageRows.map((message) => message.project_id).filter(Boolean));
-
-      const [senderMap, projectMap] = await Promise.all([
-        fetchProfileMap(senderIds),
-        fetchProjectMap(projectIds),
-      ]);
-
-      renderMessages(messageRows, senderMap, projectMap);
-    } catch (error) {
-      console.error("Failed to load messages:", error);
-      renderListState(els.messageList, "Unable to load messages");
-    }
-  }
-
-  async function loadNotifications() {
-    try {
-      const currentUser = await getCurrentUserId();
-      if (!currentUser) {
-        renderNotificationsState("No notifications");
-        return;
-      }
-
-      const { data: notifications, error } = await db
-        .from("notifications")
-        .select("id, title, is_read, created_at")
-        .eq("user_id", currentUser)
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-
-      const rows = notifications || [];
-      const unreadCount = rows.filter((item) => !item.is_read).length;
-
-      if (els.notificationCount) {
-        els.notificationCount.textContent = String(unreadCount);
-      }
-
-      if (rows.length === 0) {
-        renderNotificationsState("No notifications");
-        return;
-      }
-
-      renderNotifications(rows);
-    } catch (error) {
-      console.error("Failed to load notifications:", error);
-      if (els.notificationCount) {
-        els.notificationCount.textContent = "0";
-      }
-      renderNotificationsState("Unable to load notifications");
-    }
-  }
-
-  async function loadActivity() {
-    try {
-      const { data: updates, error } = await db
-        .from("project_updates")
-        .select("id, project_id, title, description, phase, created_by, created_at")
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-
-      const rows = updates || [];
-      if (rows.length === 0) {
-        renderListState(els.activityList, "No recent activity");
-        return;
-      }
-
-      const projectIds = unique(rows.map((item) => item.project_id).filter(Boolean));
-      const creatorIds = unique(rows.map((item) => item.created_by).filter(Boolean));
-
-      const [projectMap, creatorMap] = await Promise.all([
-        fetchProjectMap(projectIds),
-        fetchProfileMap(creatorIds),
-      ]);
-
-      renderActivity(rows, projectMap, creatorMap);
-    } catch (error) {
-      console.error("Failed to load activity:", error);
-      renderListState(els.activityList, "Unable to load activity");
-    }
-  }
-
-  // -------------------------------------------------
-  // Query helpers
-  // -------------------------------------------------
-  async function countRows(table, queryBuilder) {
-    let query = db.from(table).select("id", { count: "exact", head: true });
-    if (typeof queryBuilder === "function") {
-      query = queryBuilder(query);
-    }
-
-    const { count, error } = await query;
-    if (error) throw error;
-
-    return count || 0;
-  }
-
-  async function getCurrentUserId() {
-    const { data, error } = await db.auth.getUser();
-    if (error || !data?.user?.id) return null;
-    return data.user.id;
-  }
-
-  async function fetchProfileMap(ids) {
-    if (!ids || ids.length === 0) return new Map();
-
-    const { data, error } = await db
-      .from("profiles")
-      .select("id, full_name, avatar_url, role")
-      .in("id", ids);
-
-    if (error) throw error;
-
-    return new Map((data || []).map((item) => [item.id, item]));
-  }
-
-  async function fetchProjectMap(ids) {
-    if (!ids || ids.length === 0) return new Map();
-
-    const { data, error } = await db
-      .from("projects")
-      .select("id, name, project_code, status, progress, due_date, client_id")
-      .in("id", ids);
-
-    if (error) throw error;
-
-    return new Map((data || []).map((item) => [item.id, item]));
-  }
-
-  // -------------------------------------------------
-  // Render helpers
-  // -------------------------------------------------
-  function renderProjectsTable(projects, clientMap) {
-    if (!els.projectsTable) return;
-
-    const fragment = document.createDocumentFragment();
-    fragment.appendChild(createProjectHeadRow());
-
-    projects.forEach((project) => {
-      const client = clientMap.get(project.client_id);
-      fragment.appendChild(
-        createProjectRow(project, client?.full_name || "Unknown client")
-      );
+  if (els.notificationBtn && els.notificationDropdown) {
+    els.notificationBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const willOpen = els.notificationDropdown.hidden;
+      els.notificationDropdown.hidden = !willOpen;
+      els.notificationBtn.setAttribute("aria-expanded", String(willOpen));
     });
+  }
 
+  if (els.openSidebarBtn && els.sidebar && els.backdrop) {
+    els.openSidebarBtn.addEventListener("click", () => setSidebar(true));
+    els.backdrop.addEventListener("click", () => {
+      setSidebar(false);
+      closeNotifications();
+    });
+  }
+
+  document.addEventListener("click", (event) => {
+    if (!els.notificationDropdown || els.notificationDropdown.hidden) return;
+    if (!event.target.closest(".notification-wrap")) {
+      closeNotifications();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      setSidebar(false);
+      closeNotifications();
+    }
+  });
+}
+
+function startRealtimeListeners(uid) {
+  showLoadingState();
+
+  state.unsubscribe.push(
+    onSnapshot(collection(db, "users"), (snapshot) => {
+      state.users = snapshot.docs.map(mapDoc);
+      state.usersById = buildMap(state.users);
+      renderDashboard();
+    }, handleListenerError("users"))
+  );
+
+  state.unsubscribe.push(
+    onSnapshot(
+      query(collection(db, "projects"), orderBy("updatedAt", "desc")),
+      (snapshot) => {
+        state.projects = snapshot.docs.map(mapDoc);
+        state.projectsById = buildMap(state.projects);
+        renderDashboard();
+      },
+      handleListenerError("projects")
+    )
+  );
+
+  state.unsubscribe.push(
+    onSnapshot(
+      query(collection(db, "invoices"), orderBy("createdAt", "desc")),
+      (snapshot) => {
+        state.invoices = snapshot.docs.map(mapDoc);
+        renderDashboard();
+      },
+      handleListenerError("invoices")
+    )
+  );
+
+  state.unsubscribe.push(
+    onSnapshot(
+      query(collection(db, "messages"), orderBy("timestamp", "desc"), limit(5)),
+      (snapshot) => {
+        state.messages = snapshot.docs.map(mapDoc);
+        renderMessages();
+      },
+      handleListenerError("messages")
+    )
+  );
+
+  state.unsubscribe.push(
+    onSnapshot(
+      query(collection(db, "activityLogs"), orderBy("timestamp", "desc"), limit(10)),
+      (snapshot) => {
+        state.activity = snapshot.docs.map(mapDoc);
+        renderActivity();
+      },
+      handleListenerError("activity logs")
+    )
+  );
+
+  state.unsubscribe.push(
+    onSnapshot(
+      query(collection(db, "notifications"), where("userId", "==", uid)),
+      (snapshot) => {
+        state.notifications = snapshot.docs.map(mapDoc).sort((a, b) => getTimeMs(b.createdAt) - getTimeMs(a.createdAt));
+        renderNotifications();
+      },
+      handleListenerError("notifications")
+    )
+  );
+}
+
+function teardownListeners() {
+  while (state.unsubscribe.length) {
+    const unsubscribe = state.unsubscribe.pop();
+    try {
+      unsubscribe();
+    } catch {
+      // Ignore teardown errors.
+    }
+  }
+}
+
+async function loadUserProfile(uid) {
+  const snap = await getDoc(doc(db, "users", uid));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() };
+}
+
+async function safeSignOut() {
+  try {
+    await signOut(auth);
+  } catch {
+    // Ignore sign-out errors during redirect fallback.
+  }
+}
+
+function renderDashboard() {
+  if (!state.ready) return;
+
+  renderStats();
+  renderProjects();
+  renderMessages();
+  renderActivity();
+  renderNotifications();
+  renderTopbarSubtitle();
+}
+
+function renderStats() {
+  const activeProjects = state.projects.filter((project) =>
+    ACTIVE_PROJECT_STATUSES.has(normalizeText(project.status))
+  ).length;
+
+  const pendingPayments = state.invoices.filter((invoice) =>
+    normalizeText(invoice.status) === "pending"
+  ).length;
+
+  const pendingReviews = state.projects.filter((project) =>
+    normalizeText(project.status) === "review"
+  ).length;
+
+  const revenueThisMonth = state.invoices
+    .filter((invoice) => normalizeText(invoice.status) === "paid" && isCurrentMonth(invoice.issueDate || invoice.createdAt))
+    .reduce((sum, invoice) => sum + Number(invoice.amount || 0), 0);
+
+  setStatCard(0, formatNumber(activeProjects), "Currently running projects");
+  setStatCard(1, formatCurrency(revenueThisMonth), "Collected revenue");
+  setStatCard(2, formatNumber(pendingPayments), "Invoices awaiting payment");
+  setStatCard(3, formatNumber(pendingReviews), "Waiting for client approval");
+}
+
+function renderTopbarSubtitle() {
+  if (!els.topbarSubtext) return;
+
+  const activeClients = state.users.filter((user) =>
+    normalizeText(user.role) === "client" && isActiveUser(user)
+  ).length;
+
+  const teamMembers = state.users.filter((user) =>
+    TEAM_ROLES.has(normalizeText(user.role)) && isActiveUser(user)
+  ).length;
+
+  const totalProjects = state.projects.length;
+
+  els.topbarSubtext.textContent = `${activeClients} active clients · ${teamMembers} team members · ${totalProjects} projects tracked`;
+}
+
+function renderProjects() {
+  if (!els.projectsTable) return;
+
+  const sorted = [...state.projects].sort((a, b) => getTimeMs(b.updatedAt || b.createdAt) - getTimeMs(a.updatedAt || a.createdAt));
+  const rows = sorted.slice(0, 6);
+
+  const fragment = document.createDocumentFragment();
+  fragment.appendChild(createProjectHeadRow());
+
+  if (rows.length === 0) {
+    fragment.appendChild(createStateBlock("No projects available"));
     els.projectsTable.replaceChildren(fragment);
+    return;
   }
 
-  function renderProjectTableState(message) {
-    if (!els.projectsTable) return;
-    const fragment = document.createDocumentFragment();
-    fragment.appendChild(createProjectHeadRow());
-    fragment.appendChild(createStateBlock(message));
-    els.projectsTable.replaceChildren(fragment);
+  for (const project of rows) {
+    fragment.appendChild(createProjectRow(project));
   }
 
-  function createProjectHeadRow() {
-    const row = document.createElement("div");
-    row.className = "project-head-row";
+  els.projectsTable.replaceChildren(fragment);
+}
 
-    const headers = ["Project", "Client", "Progress", "Phase", "Due Date", ""];
-    headers.forEach((label) => {
-      const cell = document.createElement("div");
-      cell.textContent = label;
-      row.appendChild(cell);
-    });
+function renderMessages() {
+  if (!els.messageList) return;
 
-    return row;
+  const rows = [...state.messages].sort((a, b) => getTimeMs(b.timestamp) - getTimeMs(a.timestamp));
+  const fragment = document.createDocumentFragment();
+
+  if (rows.length === 0) {
+    els.messageList.replaceChildren(createStateBlock("No messages available"));
+    return;
   }
 
-  function createProjectRow(project, clientName) {
-    const row = document.createElement("div");
-    row.className = "project-row";
-    row.tabIndex = 0;
-    row.setAttribute("role", "link");
-    row.setAttribute("aria-label", `Open ${project.name}`);
+  for (const message of rows) {
+    const sender = state.usersById.get(message.senderId);
+    const project = state.projectsById.get(message.projectId);
 
-    const projectName = createCell("div", "project-name", project.name || "Untitled project");
-    const clientCell = createCell("div", "project-client", clientName || "Unknown client");
-    const progressCell = document.createElement("div");
-    progressCell.className = "project-progress";
-
-    const progressWrap = document.createElement("div");
-    progressWrap.className = "progress-wrap";
-
-    const progressLabel = document.createElement("span");
-    const progressValue = clampNumber(project.progress, 0, 100);
-    progressLabel.textContent = `${progressValue}%`;
-
-    const progressTrack = document.createElement("div");
-    progressTrack.className = "progress-track";
-    progressTrack.setAttribute("aria-hidden", "true");
-
-    const progressFill = document.createElement("div");
-    progressFill.className = "progress-fill";
-    progressFill.style.width = `${progressValue}%`;
-
-    progressTrack.appendChild(progressFill);
-    progressWrap.append(progressLabel, progressTrack);
-    progressCell.appendChild(progressWrap);
-
-    const statusCell = createCell("div", "project-phase", humanize(project.status));
-    const dueCell = createCell("div", "project-due", formatDateOrDash(project.due_date));
-
-    const linkCell = document.createElement("div");
-    linkCell.className = "project-link";
-    linkCell.setAttribute("aria-hidden", "true");
-    linkCell.textContent = "↗";
-
-    row.append(projectName, clientCell, progressCell, statusCell, dueCell, linkCell);
-
-    const openWorkspace = () => {
-      try {
-        sessionStorage.setItem("ews:selectedProjectId", project.id);
-      } catch {
-        // Storage can fail in hardened browser settings. Navigation still works.
-      }
-      window.location.href = "../project-workspace/index.html";
-    };
-
-    row.addEventListener("click", openWorkspace);
-    row.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        openWorkspace();
-      }
-    });
-
-    return row;
+    fragment.appendChild(
+      createMessageItem({
+        projectName: getProjectTitle(project),
+        senderName: getDisplayName(sender) || "Unknown sender",
+        preview: truncateText(message.message, 120),
+        time: formatRelativeTime(message.timestamp),
+      })
+    );
   }
 
-  function renderMessages(messages, senderMap, projectMap) {
-    if (!els.messageList) return;
-    const fragment = document.createDocumentFragment();
+  els.messageList.replaceChildren(fragment);
+}
 
-    messages.forEach((message) => {
-      const sender = senderMap.get(message.sender_id);
-      const project = projectMap.get(message.project_id);
+function renderActivity() {
+  if (!els.activityList) return;
 
-      fragment.appendChild(
-        createMessageItem({
-          projectName: project?.name || "Unknown project",
-          senderName: sender?.full_name || "Unknown sender",
-          preview: truncateText(message.message, 120),
-          time: formatRelativeTime(message.created_at),
-        })
-      );
-    });
+  const rows = [...state.activity].sort((a, b) => getTimeMs(b.timestamp) - getTimeMs(a.timestamp));
+  const fragment = document.createDocumentFragment();
 
-    els.messageList.replaceChildren(fragment);
+  if (rows.length === 0) {
+    els.activityList.replaceChildren(createStateBlock("No recent activity"));
+    return;
   }
 
-  function renderActivity(updates, projectMap, creatorMap) {
-    if (!els.activityList) return;
-    const fragment = document.createDocumentFragment();
+  for (const item of rows) {
+    const actor = state.usersById.get(item.userId);
+    const project = state.projectsById.get(item.targetType === "project" ? item.targetId : null);
 
-    updates.forEach((update) => {
-      const project = projectMap.get(update.project_id);
-      const creator = creatorMap.get(update.created_by);
-
-      fragment.appendChild(
-        createActivityItem({
-          title: update.title || "Update",
-          text: update.description || `${humanize(update.phase)} update`,
-          projectName: project?.name || "Unknown project",
-          creatorName: creator?.full_name || "System",
-          time: formatRelativeTime(update.created_at),
-        })
-      );
-    });
-
-    els.activityList.replaceChildren(fragment);
+    fragment.appendChild(
+      createActivityItem({
+        title: item.action || "Update",
+        text: buildActivityDescription(item, project),
+        projectName: project ? getProjectTitle(project) : humanize(item.targetType || "activity"),
+        creatorName: getDisplayName(actor) || "System",
+        time: formatRelativeTime(item.timestamp),
+      })
+    );
   }
 
-  function renderNotifications(notifications) {
-    if (!els.notificationList) return;
-    const fragment = document.createDocumentFragment();
+  els.activityList.replaceChildren(fragment);
+}
 
-    notifications.forEach((notification) => {
-      fragment.appendChild(
-        createNotificationItem({
-          title: notification.title || "Notification",
-          time: formatRelativeTime(notification.created_at),
-          read: Boolean(notification.is_read),
-        })
-      );
-    });
+function renderNotifications() {
+  if (!els.notificationList || !els.notificationCount) return;
 
-    els.notificationList.replaceChildren(fragment);
+  const unreadCount = state.notifications.filter((notification) => !isRead(notification)).length;
+  els.notificationCount.textContent = String(unreadCount);
+
+  const rows = [...state.notifications].sort((a, b) => getTimeMs(b.createdAt) - getTimeMs(a.createdAt));
+  const fragment = document.createDocumentFragment();
+
+  if (rows.length === 0) {
+    els.notificationList.replaceChildren(createStateBlock("No notifications"));
+    return;
   }
 
-  function renderNotificationsState(message) {
-    if (!els.notificationList) return;
-    els.notificationList.replaceChildren(createStateBlock(message));
+  for (const notification of rows) {
+    fragment.appendChild(
+      createNotificationItem({
+        title: notification.title || "Notification",
+        time: formatRelativeTime(notification.createdAt),
+        read: isRead(notification),
+      })
+    );
   }
 
-  function renderListState(container, message) {
-    if (!container) return;
-    container.replaceChildren(createStateBlock(message));
+  els.notificationList.replaceChildren(fragment);
+}
+
+function createProjectHeadRow() {
+  const row = document.createElement("div");
+  row.className = "project-head-row";
+
+  ["Project", "Client", "Progress", "Status", "Due Date", ""].forEach((label) => {
+    const cell = document.createElement("div");
+    cell.textContent = label;
+    row.appendChild(cell);
+  });
+
+  return row;
+}
+
+function createProjectRow(project) {
+  const row = document.createElement("div");
+  row.className = "project-row";
+  row.tabIndex = 0;
+  row.setAttribute("role", "link");
+  row.setAttribute("aria-label", `Open ${getProjectTitle(project)}`);
+
+  const client = state.usersById.get(project.clientId);
+  const projectTitle = getProjectTitle(project);
+  const clientName = getDisplayName(client) || "Unknown client";
+  const progressValue = clampNumber(project.progress, 0, 100);
+
+  const titleCell = document.createElement("div");
+  titleCell.className = "project-name";
+  titleCell.textContent = projectTitle;
+
+  const clientCell = document.createElement("div");
+  clientCell.className = "project-client";
+  clientCell.textContent = clientName;
+
+  const progressCell = document.createElement("div");
+  progressCell.className = "project-progress";
+
+  const progressWrap = document.createElement("div");
+  progressWrap.className = "progress-wrap";
+
+  const progressLabel = document.createElement("span");
+  progressLabel.textContent = `${progressValue}%`;
+
+  const progressTrack = document.createElement("div");
+  progressTrack.className = "progress-track";
+  progressTrack.setAttribute("aria-hidden", "true");
+
+  const progressFill = document.createElement("div");
+  progressFill.className = "progress-fill";
+  progressFill.style.width = `${progressValue}%`;
+
+  progressTrack.appendChild(progressFill);
+  progressWrap.append(progressLabel, progressTrack);
+  progressCell.appendChild(progressWrap);
+
+  const statusCell = document.createElement("div");
+  statusCell.className = "project-phase";
+  statusCell.textContent = humanize(project.status);
+
+  const dueCell = document.createElement("div");
+  dueCell.className = "project-due";
+  dueCell.textContent = formatDateOrDash(project.dueDate);
+
+  const linkCell = document.createElement("div");
+  linkCell.className = "project-link";
+  linkCell.setAttribute("aria-hidden", "true");
+  linkCell.textContent = "↗";
+
+  row.append(titleCell, clientCell, progressCell, statusCell, dueCell, linkCell);
+
+  const openWorkspace = () => {
+    try {
+      sessionStorage.setItem("ews:selectedProjectId", project.id);
+    } catch {
+      // Ignore session storage failures.
+    }
+    window.location.href = "../project-workspace/index.html";
+  };
+
+  row.addEventListener("click", openWorkspace);
+  row.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openWorkspace();
+    }
+  });
+
+  return row;
+}
+
+function createMessageItem({ projectName, senderName, preview, time }) {
+  const item = document.createElement("article");
+  item.className = "message-item";
+
+  const top = document.createElement("div");
+  top.className = "message-top";
+
+  const left = document.createElement("div");
+  const project = createCell("div", "message-project", projectName);
+  const sender = createCell("div", "message-sender", senderName);
+  left.append(project, sender);
+
+  const timeEl = createCell("div", "message-time", time);
+
+  top.append(left, timeEl);
+
+  const previewEl = document.createElement("p");
+  previewEl.className = "message-preview";
+  previewEl.textContent = preview || "No message text";
+
+  item.append(top, previewEl);
+  return item;
+}
+
+function createActivityItem({ title, text, projectName, creatorName, time }) {
+  const item = document.createElement("article");
+  item.className = "activity-item";
+
+  const marker = document.createElement("span");
+  marker.className = "activity-marker";
+  marker.setAttribute("aria-hidden", "true");
+
+  const meta = document.createElement("div");
+  meta.className = "activity-meta";
+
+  const top = document.createElement("div");
+  top.className = "activity-top";
+
+  const left = document.createElement("div");
+  const activityTitle = createCell("div", "activity-title", title);
+  const activityText = createCell("div", "activity-text", text);
+  left.append(activityTitle, activityText);
+
+  const timeEl = createCell("div", "activity-time", time);
+
+  top.append(left, timeEl);
+
+  const projectLine = document.createElement("div");
+  projectLine.className = "activity-text";
+  projectLine.textContent = `${projectName} · ${creatorName}`;
+
+  meta.append(top, projectLine);
+  item.append(marker, meta);
+  return item;
+}
+
+function createNotificationItem({ title, time, read }) {
+  const item = document.createElement("div");
+  item.className = "dropdown-item";
+  item.style.opacity = read ? "0.72" : "1";
+
+  const strong = document.createElement("strong");
+  strong.textContent = title;
+
+  const span = document.createElement("span");
+  span.textContent = time;
+
+  item.append(strong, span);
+  return item;
+}
+
+function createCell(tag, className, text) {
+  const node = document.createElement(tag);
+  node.className = className;
+  node.textContent = text;
+  return node;
+}
+
+function createStateBlock(message) {
+  const block = document.createElement("div");
+  block.style.padding = "18px 16px";
+  block.style.color = "var(--muted)";
+  block.style.lineHeight = "1.6";
+  block.style.border = "1px dashed rgba(255,255,255,0.10)";
+  block.style.borderRadius = "16px";
+  block.style.background = "rgba(255,255,255,0.02)";
+  block.textContent = message;
+  return block;
+}
+
+function showLoadingState() {
+  setStatLoading();
+  renderProjectState("Connecting to Firebase…");
+  renderListState(els.messageList, "Connecting to Firebase…");
+  renderListState(els.activityList, "Connecting to Firebase…");
+  renderNotificationState("Connecting to Firebase…");
+}
+
+function setStatLoading() {
+  els.statCards.forEach((card) => {
+    const value = card.querySelector("h2");
+    const sub = card.querySelector(".stat-sub");
+    if (value) value.textContent = "—";
+    if (sub) sub.textContent = "Loading…";
+  });
+}
+
+function setStatCard(index, value, subtitle) {
+  const card = els.statCards[index];
+  if (!card) return;
+
+  const valueEl = card.querySelector("h2");
+  const subEl = card.querySelector(".stat-sub");
+
+  if (valueEl) valueEl.textContent = value;
+  if (subEl) subEl.textContent = subtitle;
+}
+
+function renderProjectState(message) {
+  if (!els.projectsTable) return;
+  const fragment = document.createDocumentFragment();
+  fragment.appendChild(createProjectHeadRow());
+  fragment.appendChild(createStateBlock(message));
+  els.projectsTable.replaceChildren(fragment);
+}
+
+function renderListState(container, message) {
+  if (!container) return;
+  container.replaceChildren(createStateBlock(message));
+}
+
+function renderNotificationState(message) {
+  if (!els.notificationList) return;
+  els.notificationList.replaceChildren(createStateBlock(message));
+}
+
+function setWelcomeName(fullName) {
+  if (!els.welcomeHeading) return;
+  els.welcomeHeading.textContent = `Welcome Back, ${fullName}`;
+}
+
+function setTopbarSubtitle(text) {
+  if (!els.topbarSubtext) return;
+  els.topbarSubtext.textContent = text;
+}
+
+function setSidebar(open) {
+  if (!els.sidebar || !els.backdrop) return;
+  els.sidebar.classList.toggle("open", open);
+  els.backdrop.hidden = !open;
+}
+
+function closeNotifications() {
+  if (!els.notificationDropdown || !els.notificationBtn) return;
+  els.notificationDropdown.hidden = true;
+  els.notificationBtn.setAttribute("aria-expanded", "false");
+}
+
+function handleListenerError(label) {
+  return (error) => {
+    console.error(`Firestore listener error (${label}):`, error);
+  };
+}
+
+function buildMap(items) {
+  return new Map(items.map((item) => [item.id, item]));
+}
+
+function mapDoc(snapshot) {
+  return { id: snapshot.id, ...snapshot.data() };
+}
+
+function getDisplayName(user) {
+  if (!user) return "";
+  return (
+    user.fullName ||
+    user.name ||
+    user.displayName ||
+    user.username ||
+    user.email?.split("@")[0] ||
+    ""
+  );
+}
+
+function getProjectTitle(project) {
+  if (!project) return "Unknown project";
+  return (
+    project.title ||
+    project.name ||
+    project.projectName ||
+    project.project_code ||
+    project.code ||
+    "Untitled project"
+  );
+}
+
+function buildActivityDescription(item, project) {
+  const targetLabel = project ? getProjectTitle(project) : humanize(item.targetType || "activity");
+  const action = item.action || "Updated item";
+  return `${action} · ${targetLabel}`;
+}
+
+function isActiveUser(user) {
+  return user?.active !== false;
+}
+
+function isRead(notification) {
+  return Boolean(notification?.read || notification?.isRead || notification?.is_read);
+}
+
+function normalizeText(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+}
+
+function humanize(value) {
+  return String(value || "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (ch) => ch.toUpperCase());
+}
+
+function truncateText(text, maxLength) {
+  const str = String(text || "");
+  if (str.length <= maxLength) return str;
+  return `${str.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
+function formatNumber(value) {
+  return new Intl.NumberFormat("en-IN").format(Number(value) || 0);
+}
+
+function formatCurrency(value) {
+  return currencyFormatter.format(Number(value) || 0);
+}
+
+function formatDateOrDash(value) {
+  const date = toDate(value);
+  if (!date) return "—";
+  return shortDateFormatter.format(date);
+}
+
+function formatRelativeTime(value) {
+  const date = toDate(value);
+  if (!date) return "Just now";
+
+  const diffMs = Date.now() - date.getTime();
+  const diffMinutes = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMinutes < 1) return "Just now";
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+
+  return shortDateFormatter.format(date);
+}
+
+function toDate(value) {
+  if (!value) return null;
+
+  if (typeof value.toDate === "function") {
+    const date = value.toDate();
+    return Number.isNaN(date.getTime()) ? null : date;
   }
 
-  function createStateBlock(message) {
-    const block = document.createElement("div");
-    block.style.padding = "18px 16px";
-    block.style.color = "var(--muted)";
-    block.style.lineHeight = "1.6";
-    block.style.border = "1px dashed rgba(255,255,255,0.10)";
-    block.style.borderRadius = "16px";
-    block.style.background = "rgba(255,255,255,0.02)";
-    block.textContent = message;
-    return block;
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
   }
 
-  function createCell(tag, className, text) {
-    const node = document.createElement(tag);
-    node.className = className;
-    node.textContent = text;
-    return node;
-  }
-
-  function createMessageItem({ projectName, senderName, preview, time }) {
-    const item = document.createElement("article");
-    item.className = "message-item";
-
-    const top = document.createElement("div");
-    top.className = "message-top";
-
-    const left = document.createElement("div");
-    const project = createCell("div", "message-project", projectName);
-    const sender = createCell("div", "message-sender", senderName);
-    left.append(project, sender);
-
-    const timeEl = createCell("div", "message-time", time);
-
-    top.append(left, timeEl);
-
-    const previewEl = document.createElement("p");
-    previewEl.className = "message-preview";
-    previewEl.textContent = preview || "No message text";
-
-    item.append(top, previewEl);
-    return item;
-  }
-
-  function createActivityItem({ title, text, projectName, creatorName, time }) {
-    const item = document.createElement("article");
-    item.className = "activity-item";
-
-    const marker = document.createElement("span");
-    marker.className = "activity-marker";
-    marker.setAttribute("aria-hidden", "true");
-
-    const meta = document.createElement("div");
-    meta.className = "activity-meta";
-
-    const top = document.createElement("div");
-    top.className = "activity-top";
-
-    const left = document.createElement("div");
-    const activityTitle = createCell("div", "activity-title", title);
-    const activityText = createCell("div", "activity-text", text);
-    left.append(activityTitle, activityText);
-
-    const timeEl = createCell("div", "activity-time", time);
-
-    top.append(left, timeEl);
-
-    const projectLine = document.createElement("div");
-    projectLine.className = "activity-text";
-    projectLine.textContent = `${projectName} · ${creatorName}`;
-
-    meta.append(top, projectLine);
-    item.append(marker, meta);
-    return item;
-  }
-
-  function createNotificationItem({ title, time, read }) {
-    const item = document.createElement("div");
-    item.className = "dropdown-item";
-    item.style.opacity = read ? "0.72" : "1";
-
-    const strong = document.createElement("strong");
-    strong.textContent = title;
-
-    const span = document.createElement("span");
-    span.textContent = time;
-
-    item.append(strong, span);
-    return item;
-  }
-
-  // -------------------------------------------------
-  // Formatting helpers
-  // -------------------------------------------------
-  function unique(values) {
-    return Array.from(new Set(values));
-  }
-
-  function clampNumber(value, min, max) {
-    const n = Number(value);
-    if (Number.isNaN(n)) return min;
-    return Math.max(min, Math.min(max, n));
-  }
-
-  function humanize(value) {
-    if (!value) return "Unknown";
-    return String(value)
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, (ch) => ch.toUpperCase());
-  }
-
-  function formatNumber(value) {
-    return new Intl.NumberFormat("en-IN").format(Number(value) || 0);
-  }
-
-  function formatCurrency(value) {
-    return currencyFormatter.format(Number(value) || 0);
-  }
-
-  function formatDateOrDash(value) {
-    if (!value) return "—";
+  if (typeof value === "number") {
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "—";
-    return shortDateFormatter.format(date);
+    return Number.isNaN(date.getTime()) ? null : date;
   }
 
-  function truncateText(text, maxLength) {
-    const str = String(text || "");
-    if (str.length <= maxLength) return str;
-    return `${str.slice(0, maxLength - 1).trimEnd()}…`;
-  }
-
-  function formatRelativeTime(value) {
-    if (!value) return "Just now";
-
+  if (typeof value === "string") {
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "Just now";
-
-    const diffMs = Date.now() - date.getTime();
-    const diffMinutes = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMinutes < 1) return "Just now";
-    if (diffMinutes < 60) return `${diffMinutes}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-
-    return shortDateFormatter.format(date);
+    return Number.isNaN(date.getTime()) ? null : date;
   }
-})();
+
+  if (typeof value === "object" && typeof value.seconds === "number") {
+    const date = new Date(value.seconds * 1000);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  return null;
+}
+
+function getTimeMs(value) {
+  const date = toDate(value);
+  return date ? date.getTime() : 0;
+}
+
+function clampNumber(value, min, max) {
+  const number = Number(value);
+  if (Number.isNaN(number)) return min;
+  return Math.max(min, Math.min(max, number));
+}
+
+function isCurrentMonth(value) {
+  const date = toDate(value);
+  if (!date) return false;
+
+  const now = new Date();
+  return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+}

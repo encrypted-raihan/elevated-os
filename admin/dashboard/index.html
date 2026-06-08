@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Elevated Web Solutions Portal — Admin Dashboard</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -62,19 +63,19 @@
     <main class="main">
       <header class="topbar">
         <div class="topbar-left">
-          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar">
+          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar" type="button">
             <span aria-hidden="true">☰</span>
           </button>
 
           <div>
             <p class="eyebrow">Admin Dashboard</p>
-            <h1>Welcome Back, Raihan</h1>
-            <p class="subtext">Manage your projects, clients and revenue.</p>
+            <h1>Welcome Back</h1>
+            <p class="subtext">Loading your workspace…</p>
           </div>
         </div>
 
         <div class="topbar-right">
-          <button class="new-project-btn" type="button">
+          <button class="new-project-btn" id="newProjectBtn" type="button">
             + New Project
           </button>
 
@@ -85,6 +86,7 @@
               aria-haspopup="true"
               aria-expanded="false"
               aria-label="Notifications"
+              type="button"
             >
               <svg
                 class="bell-icon"
@@ -99,7 +101,7 @@
                 <path d="M13.73 21a2 2 0 01-3.46 0"/>
               </svg>
 
-              <span class="badge" id="notificationCount">3</span>
+              <span class="badge" id="notificationCount">0</span>
             </button>
 
             <div class="notification-dropdown" id="notificationDropdown" hidden>
@@ -113,26 +115,26 @@
       <section class="stats-grid" aria-label="Key performance indicators">
         <article class="stat-card">
           <p class="stat-title">Active Projects</p>
-          <h2>12</h2>
-          <p class="stat-sub">Currently running projects</p>
+          <h2>—</h2>
+          <p class="stat-sub">Loading…</p>
         </article>
 
         <article class="stat-card">
           <p class="stat-title">Revenue This Month</p>
-          <h2>₹85,000</h2>
-          <p class="stat-sub">Collected revenue</p>
+          <h2>—</h2>
+          <p class="stat-sub">Loading…</p>
         </article>
 
         <article class="stat-card">
           <p class="stat-title">Pending Payments</p>
-          <h2>3</h2>
-          <p class="stat-sub">Invoices awaiting payment</p>
+          <h2>—</h2>
+          <p class="stat-sub">Loading…</p>
         </article>
 
         <article class="stat-card">
           <p class="stat-title">Pending Reviews</p>
-          <h2>2</h2>
-          <p class="stat-sub">Waiting for client approval</p>
+          <h2>—</h2>
+          <p class="stat-sub">Loading…</p>
         </article>
       </section>
 
@@ -171,9 +173,6 @@
     </main>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../shared/js/supabase.js"></script>
-  <script src="../../shared/js/auth.js"></script>
-  <script src="script.js"></script>
+  <script type="module" src="./script.js"></script>
 </body>
 </html>
