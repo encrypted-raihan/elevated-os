@@ -14,7 +14,7 @@ import {
   setDoc,
   Timestamp,
   updateDoc,
-  where,
+  where
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 const LOGIN_ROUTE = "/index/index.html";
@@ -560,7 +560,47 @@ async function handleProjectSubmit(event) {
   setButtonLoading(document.querySelector('#projectForm button[type="submit"]'), true);
 
   try {
-    const projectRef = await addDoc(collection(db, "projects"), payload);
+    const participants = unique([
+      state.user.uid,
+      clientId,
+      projectManagerId,
+      ...assignedDevelopers,
+    ]);
+
+    const conversationRef = await addDoc(
+      collection(db, "conversations"),
+      {
+        type: "project",
+        projectName: title,
+        participantIds: participants,
+
+        lastMessageText: "",
+        lastSenderId: "",
+        lastSenderName: "",
+
+        unreadCounts: Object.fromEntries(
+          participants.map(id => [id, 0])
+        ),
+
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      }
+    );
+
+    const projectRef = await addDoc(
+      collection(db, "projects"),
+      {
+        ...payload,
+        projectConversationId: conversationRef.id,
+      }
+    );
+
+    await updateDoc(
+      doc(db, "conversations", conversationRef.id),
+      {
+        projectId: projectRef.id
+      }
+    );
 
     const recipientIds = unique([
       state.user.uid,

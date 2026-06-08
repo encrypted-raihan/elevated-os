@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elevated OS — Client Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/ui.css" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+      <div class="brand">
+        <div class="brand-mark">
+          <img src="../../assets/elevatedlogo.png" alt="Elevated Web Solutions" class="brand-logo" />
+        </div>
+        <div class="brand-content">
+          <h2>ELEVATED</h2>
+          <p>WEB SOLUTIONS</p>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav-item active" data-page="dashboard" href="../dashboard/index.html" aria-current="page"><span>Dashboard</span></a>
+        <a class="nav-item" data-page="project" href="../project/index.html"><span>Project</span></a>
+        <a class="nav-item" data-page="messages" href="../messages/index.html"><span>Messages</span></a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" type="button"><span aria-hidden="true">↩</span> Sign out</button>
+      </div>
+    </aside>
+
+    <div class="backdrop" id="backdrop" hidden></div>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar" type="button"><span aria-hidden="true">☰</span></button>
+          <div>
+            <p class="eyebrow">Client Dashboard</p>
+            <h1>Welcome Back, Raihan</h1>
+            <p class="subtext">Track your live project progress, recent messages, and approvals from one place.</p>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <a class="new-project-btn" href="../project/index.html">+ New Project</a>
+          <div class="notification-wrap">
+            <button class="icon-btn" id="notificationBtn" aria-haspopup="true" aria-expanded="false" aria-label="Notifications" type="button">
+              <svg class="bell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 01-3.46 0"/>
+              </svg>
+              <span class="badge" id="notificationCount">3</span>
+            </button>
+            <div class="notification-dropdown" id="notificationDropdown" hidden>
+              <div class="dropdown-title">Notifications</div>
+              <div class="dropdown-list" id="notificationList"></div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="card-grid cards-4" aria-label="Overview cards">
+        <article class="stat-card">
+          <p class="stat-title">Project Progress</p>
+          <h2>78%</h2>
+          <p class="stat-sub">Overall delivery status across active work.</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-title">Files Shared</p>
+          <h2>14</h2>
+          <p class="stat-sub">Latest branding, content, and approvals.</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-title">Invoices</p>
+          <h2>2</h2>
+          <p class="stat-sub">One paid, one awaiting review.</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-title">Timeline</p>
+          <h2>6 Days</h2>
+          <p class="stat-sub">Next milestone and feedback window.</p>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">Project status</p>
+            <h3>Current Work Summary</h3>
+          </div>
+          <span class="badge-soft">Updated just now</span>
+        </div>
+
+        <div class="split-layout">
+          <article class="project-summary-card">
+            <div class="meta-row" style="margin-bottom:16px">
+              <div>
+                <p class="section-kicker" style="margin-bottom:4px">Active Project</p>
+                <h3 style="margin:0;font-size:1.4rem">Website Redesign</h3>
+              </div>
+              <span class="status status-active">Active</span>
+            </div>
+
+            <p class="subtext" style="margin:0 0 18px">
+              A polished, conversion-focused redesign for Elevated Web Solutions with refined typography, better hierarchy, and faster navigation.
+            </p>
+
+            <div style="display:grid;gap:14px">
+              <div>
+                <div class="meta-row" style="margin-bottom:8px">
+                  <span class="min-muted">Overall progress</span>
+                  <strong>78%</strong>
+                </div>
+                <div class="progress-track"><div class="progress-fill" style="width:78%"></div></div>
+              </div>
+
+              <div class="meta-row">
+                <span class="min-muted">Deadline</span>
+                <strong>22 Jun 2026</strong>
+              </div>
+              <div class="meta-row">
+                <span class="min-muted">Project manager</span>
+                <strong>Raihan</strong>
+              </div>
+              <div class="meta-row">
+                <span class="min-muted">Client</span>
+                <strong>Elevated Web Solutions</strong>
+              </div>
+            </div>
+          </article>
+
+          <article class="timeline-card">
+            <div class="panel-header" style="margin-bottom:18px">
+              <div>
+                <p class="section-kicker">Timeline</p>
+                <h3>Upcoming Milestones</h3>
+              </div>
+            </div>
+
+            <div class="message-list">
+              <div class="message-item">
+                <div class="message-top">
+                  <div>
+                    <div class="message-project">Content review</div>
+                    <div class="message-sender">Due in 2 days</div>
+                  </div>
+                  <div class="message-time">01</div>
+                </div>
+                <p class="message-preview">Finalize homepage copy and service blurbs.</p>
+              </div>
+              <div class="message-item">
+                <div class="message-top">
+                  <div>
+                    <div class="message-project">Visual polish</div>
+                    <div class="message-sender">Due in 4 days</div>
+                  </div>
+                  <div class="message-time">02</div>
+                </div>
+                <p class="message-preview">Refine card shadows, spacing, and hover motion.</p>
+              </div>
+              <div class="message-item">
+                <div class="message-top">
+                  <div>
+                    <div class="message-project">Final approval</div>
+                    <div class="message-sender">Due in 6 days</div>
+                  </div>
+                  <div class="message-time">03</div>
+                </div>
+                <p class="message-preview">Client sign-off before deployment handoff.</p>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">Projects</p>
+            <h3>Recent Projects</h3>
+          </div>
+        </div>
+
+        <div class="table" aria-label="Recent projects">
+          <div class="table-head" style="grid-template-columns:2.1fr 1.2fr 1fr 1fr 1fr 24px">
+            <div>Project</div><div>Client</div><div>Progress</div><div>Status</div><div>Due Date</div><div></div>
+          </div>
+
+          <div class="table-row" style="grid-template-columns:2.1fr 1.2fr 1fr 1fr 1fr 24px">
+            <div style="font-weight:700">Website Redesign</div>
+            <div class="min-muted">Elevated Web Solutions</div>
+            <div>
+              <div class="progress-wrap"><span class="min-muted">78%</span><div class="progress-track"><div class="progress-fill" style="width:78%"></div></div></div>
+            </div>
+            <div><span class="status status-active">Active</span></div>
+            <div class="min-muted">22 Jun 2026</div>
+            <div class="min-muted" style="text-align:right">↗</div>
+          </div>
+
+          <div class="table-row" style="grid-template-columns:2.1fr 1.2fr 1fr 1fr 1fr 24px">
+            <div style="font-weight:700">Brand Refresh</div>
+            <div class="min-muted">Elevated Web Solutions</div>
+            <div>
+              <div class="progress-wrap"><span class="min-muted">54%</span><div class="progress-track"><div class="progress-fill" style="width:54%"></div></div></div>
+            </div>
+            <div><span class="status status-review">Review</span></div>
+            <div class="min-muted">15 Jun 2026</div>
+            <div class="min-muted" style="text-align:right">↗</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">Communication</p>
+            <h3>Recent Messages</h3>
+          </div>
+        </div>
+
+        <div class="message-list">
+          <article class="message-item">
+            <div class="message-top">
+              <div>
+                <div class="message-project">Website Redesign</div>
+                <div class="message-sender">From Raihan</div>
+              </div>
+              <div class="message-time">2m ago</div>
+            </div>
+            <p class="message-preview">I’ve updated the hero section and added the new CTA treatment. Please review the latest spacing refinements.</p>
+          </article>
+          <article class="message-item">
+            <div class="message-top">
+              <div>
+                <div class="message-project">Brand Refresh</div>
+                <div class="message-sender">From Project Team</div>
+              </div>
+              <div class="message-time">1h ago</div>
+            </div>
+            <p class="message-preview">The logo lockup and banner mockups are ready for approval in the project workspace.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./script.js"></script>
+</body>
+</html>

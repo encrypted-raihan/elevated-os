@@ -1,0 +1,10 @@
+@import "../shared/ui.css";
+
+.project-summary-card,.timeline-card{
+  padding:24px;
+  border-radius:var(--radius);
+  background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+}
+.message-list{display:grid;gap:12px}

@@ -425,17 +425,40 @@ async function handleAuthChange(user) {
 function startListeners() {
   if (!state.projectId) return;
 
-  state.unsubscribe.push(
-    onSnapshot(doc(db, "projects", state.projectId), (snapshot) => {
-      if (!snapshot.exists()) {
-        window.location.href = PROJECTS_ROUTE;
-        return;
-      }
-      state.project = normalizeProject({ id: snapshot.id, ...snapshot.data() });
-      updatePermissions();
-      renderAll();
-    }, handleListenerError("project"))
+function listenProjectConversation() {
+
+  const conversationId =
+    state.project?.projectConversationId;
+
+  if (!conversationId) return;
+
+  const q = query(
+    collection(
+      db,
+      "conversations",
+      conversationId,
+      "messages"
+    ),
+    orderBy("createdAt", "asc")
   );
+
+  const unsub = onSnapshot(
+    q,
+    (snapshot) => {
+
+      state.messages =
+        snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+      renderMessages();
+    },
+    handleListenerError("project chat")
+  );
+
+  state.unsubscribe.push(unsub);
+}
 
   state.unsubscribe.push(
     onSnapshot(collection(db, "users"), (snapshot) => {
@@ -443,7 +466,7 @@ function startListeners() {
       renderAll();
     }, handleListenerError("users"))
   );
-
+listenProjectConversation();
   state.unsubscribe.push(
     onSnapshot(
       query(
@@ -807,9 +830,11 @@ function renderMessages() {
       <div class="chat-message ${isClient ? "client" : ""}">
         <div class="chat-meta">
           <strong>${escapeHtml(getUserName(getUser(message.senderId)) || "Unknown")}</strong>
-          <span>${formatRelativeTime(message.timestamp)}</span>
+          <span>${formatRelativeTime(
+  message.createdAt
+)}</span>
         </div>
-        <div>${escapeHtml(message.message || "")}</div>
+        <div>${escapeHtml(message.text|| "")}</div>
       </div>
     `;
   }).join("");
@@ -1320,22 +1345,106 @@ function openFile(url) {
 }
 
 async function sendProjectMessage(message) {
-  if (!state.project) return;
 
-  const msgRef = await addDoc(collection(db, "messages"), {
-    senderId: state.user.uid,
-    receiverId: "",
-    projectId: state.projectId,
-    message,
+  const conversationId =
+    state.project?.projectConversationId;
+
+  if (!conversationId) {
+    alert("Project conversation not found");
+    return;
+  }
+
+  const convoRef =
+    doc(
+      db,
+      "conversations",
+      conversationId
+    );
+
+  const convoSnap =
+    await getDoc(convoRef);
+
+  if (!convoSnap.exists()) {
+    alert("Conversation missing");
+    return;
+  }
+
+  const convo =
+    convoSnap.data();
+
+  const unreadCounts = {
+    ...(convo.unreadCounts || {})
+  };
+
+  (convo.participantIds || [])
+    .forEach(uid => {
+
+      unreadCounts[uid] =
+        uid === state.user.uid
+          ? 0
+          : Number(
+              unreadCounts[uid] || 0
+            ) + 1;
+    });
+
+  const msgRef =
+    doc(
+      collection(
+        db,
+        "conversations",
+        conversationId,
+        "messages"
+      )
+    );
+
+  const batch =
+    writeBatch(db);
+
+  batch.set(msgRef, {
+
+    senderId:
+      state.user.uid,
+
+    senderName:
+      getUserName(
+        state.profile
+      ),
+
+    text:
+      message,
+
     attachments: [],
-    read: false,
-    timestamp: serverTimestamp(),
+
+    createdAt:
+      serverTimestamp()
   });
 
-  await addProjectActivity("Sent Message", message.slice(0, 120));
-  await notifyProjectRecipients("New message", message);
+  batch.update(
+    convoRef,
+    {
 
-  return msgRef.id;
+      lastSenderId:
+        state.user.uid,
+
+      lastSenderName:
+        getUserName(
+          state.profile
+        ),
+
+      lastMessageText:
+        message,
+
+      lastMessageAt:
+        serverTimestamp(),
+
+      unreadCounts,
+
+      updatedAt:
+        serverTimestamp()
+    }
+  );
+
+  await batch.commit();
 }
 
 async function addProjectUpdate(title, details) {

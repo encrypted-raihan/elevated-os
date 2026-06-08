@@ -1,0 +1,61 @@
+@import "../shared/ui.css";
+
+.conversation-list{display:grid;gap:12px}
+.conversation{
+  display:flex;
+  gap:14px;
+  padding:14px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.04);
+  background:rgba(255,255,255,.02);
+}
+.conversation.active{border-color:rgba(177,18,38,.38);background:rgba(177,18,38,.08)}
+.conversation-body{min-width:0}
+.conversation-body p{
+  margin:6px 0 0;
+  color:var(--muted);
+  line-height:1.5;
+}
+.chat-card{padding:24px;border-radius:var(--radius);background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));border:1px solid var(--border);box-shadow:var(--shadow)}
+.chat-header{
+  display:flex;align-items:center;gap:14px;
+  padding-bottom:18px;margin-bottom:18px;
+  border-bottom:1px solid var(--border);
+}
+.chat-thread{display:grid;gap:12px;margin-bottom:18px}
+.chat-bubble{
+  max-width:80%;
+  padding:14px 16px;
+  border-radius:18px;
+  line-height:1.6;
+  border:1px solid rgba(255,255,255,.05);
+  box-shadow:var(--shadow-soft);
+}
+.chat-bubble.incoming{
+  background:rgba(255,255,255,.03);
+  border-top-left-radius:8px;
+}
+.chat-bubble.outgoing{
+  margin-left:auto;
+  background:linear-gradient(135deg, rgba(177,18,38,.2), rgba(201,162,39,.12));
+  border-top-right-radius:8px;
+}
+.composer{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  padding-top:18px;
+  border-top:1px solid var(--border);
+}
+.composer input{
+  flex:1;
+  height:46px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.02);
+  color:var(--text);
+  padding:0 14px;
+  outline:none;
+}
+.composer input::placeholder{color:var(--muted)}
+.split-layout{display:grid;grid-template-columns:minmax(280px,.9fr) minmax(0,1.1fr);gap:20px}
