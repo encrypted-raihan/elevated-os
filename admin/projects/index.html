@@ -90,10 +90,10 @@
               aria-label="Notifications"
             >
               <span class="bell">🔔</span>
-              <span class="badge" id="notificationCount">3</span>
+              <span class="badge" id="notificationCount">0</span>
             </button>
 
-            <div class="notification-dropdown" id="notificationDropdown" hidden>
+            <div class="notification-dropdown hidden" id="notificationDropdown">
               <div class="dropdown-title">Notifications</div>
               <div class="dropdown-list" id="notificationList"></div>
             </div>
@@ -111,7 +111,7 @@
             autocomplete="off"
           />
         </label>
-        <div class="search-hint">Search by project name, client name, or project ID</div>
+        <div class="search-hint">Search by project name, client name, manager, or project ID</div>
       </section>
 
       <section class="filter-panel" aria-label="Project filters">
@@ -177,6 +177,11 @@
           </div>
 
           <div class="form-group">
+            <label for="projectManagerSelect">Project Manager</label>
+            <select id="projectManagerSelect" name="projectManagerSelect" required></select>
+          </div>
+
+          <div class="form-group">
             <label for="budget">Budget (₹)</label>
             <input id="budget" name="budget" type="number" min="0" step="1000" placeholder="250000" required />
           </div>
@@ -192,7 +197,7 @@
           </div>
 
           <div class="form-group span-2">
-            <label>Assign Team</label>
+            <label>Assign Team <span style="opacity:.7">(optional)</span></label>
             <div class="team-list" id="teamList"></div>
           </div>
         </div>
@@ -224,13 +229,18 @@
           </div>
 
           <div class="form-group">
-            <label for="clientUsername">Username</label>
-            <input id="clientUsername" type="text" placeholder="abcbuilders" required />
+            <label for="clientEmail">Email</label>
+            <input id="clientEmail" type="email" placeholder="contact@example.com" required />
           </div>
 
           <div class="form-group">
             <label for="clientPassword">Temporary Password</label>
             <input id="clientPassword" type="text" placeholder="Temp@1234" required />
+          </div>
+
+          <div class="form-group">
+            <label for="clientCompany">Company / Brand</label>
+            <input id="clientCompany" type="text" placeholder="ABC Builders Pvt Ltd" />
           </div>
         </div>
 
@@ -242,6 +252,6 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
