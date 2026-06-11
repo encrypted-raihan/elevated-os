@@ -121,9 +121,6 @@ const els = {
   paymentReceived: el("paymentReceived"),
   paymentPending: el("paymentPending"),
   invoiceList: el("invoiceList"),
-  chatList: el("chatList"),
-  chatForm: el("chatForm"),
-  messageInput: el("messageInput"),
   updatesList: el("updatesList"),
   teamList: el("teamList"),
   editBtn: el("editBtn"),
@@ -132,8 +129,6 @@ const els = {
   generatePdfBtn: el("generatePdfBtn"),
   addUpdateBtn: el("addUpdateBtn"),
   addMemberBtn: el("addMemberBtn"),
-  chatMessageInput: el("messageInput"),
-  chatSubmit: document.querySelector('#chatForm button[type="submit"]'),
   modalBackdrop: el("modalBackdrop"),
   deleteModal: el("deleteModal"),
   deleteTitle: el("deleteTitle"),
@@ -198,17 +193,6 @@ function bindStaticUi() {
     if (!file) return;
     await uploadProjectFile(file);
     els.fileInput.value = "";
-  });
-
-  els.chatForm?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    if (!state.project) return;
-
-    const message = els.chatMessageInput.value.trim();
-    if (!message) return;
-
-    await sendProjectMessage(message);
-    els.chatMessageInput.value = "";
   });
 
   els.editBtn?.addEventListener("click", async () => {
@@ -400,7 +384,7 @@ async function handleAuthChange(user) {
 
     state.profile = profile;
     state.projectId = projectId;
-    state.project = project;
+    state.project = { ...project };
     updatePermissions();
 
     try {
@@ -425,114 +409,67 @@ async function handleAuthChange(user) {
 function startListeners() {
   if (!state.projectId) return;
 
-function listenProjectConversation() {
-
-  const conversationId =
-    state.project?.projectConversationId;
-
-  if (!conversationId) return;
-
-  const q = query(
-    collection(
-      db,
-      "conversations",
-      conversationId,
-      "messages"
-    ),
-    orderBy("createdAt", "asc")
-  );
-
-  const unsub = onSnapshot(
-    q,
+  const usersUnsub = onSnapshot(
+    collection(db, "users"),
     (snapshot) => {
-
-      state.messages =
-        snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-
-      renderMessages();
-    },
-    handleListenerError("project chat")
-  );
-
-  state.unsubscribe.push(unsub);
-}
-
-  state.unsubscribe.push(
-    onSnapshot(collection(db, "users"), (snapshot) => {
       state.users = snapshot.docs.map(mapDoc);
       renderAll();
-    }, handleListenerError("users"))
+    },
+    handleListenerError("users")
   );
-listenProjectConversation();
-  state.unsubscribe.push(
-    onSnapshot(
-      query(
-        collection(db, "files"),
-        where("projectId", "==", state.projectId),
-        orderBy("createdAt", "desc")
-      ),
-      (snapshot) => {
-        state.files = snapshot.docs.map(mapDoc);
-        renderFiles();
-      },
-      handleListenerError("files")
-    )
-  );
+  state.unsubscribe.push(usersUnsub);
 
-  state.unsubscribe.push(
-    onSnapshot(
-      query(
-        collection(db, "messages"),
-        where("projectId", "==", state.projectId),
-        orderBy("timestamp", "asc")
-      ),
-      (snapshot) => {
-        state.messages = snapshot.docs.map(mapDoc);
-        renderMessages();
-      },
-      handleListenerError("messages")
-    )
+  const filesUnsub = onSnapshot(
+    query(
+      collection(db, "files"),
+      where("projectId", "==", state.projectId),
+      orderBy("createdAt", "desc")
+    ),
+    (snapshot) => {
+      state.files = snapshot.docs.map(mapDoc);
+      renderFiles();
+    },
+    handleListenerError("files")
   );
+  state.unsubscribe.push(filesUnsub);
 
-  state.unsubscribe.push(
-    onSnapshot(
-      query(
-        collection(db, "invoices"),
-        where("projectId", "==", state.projectId),
-        orderBy("issueDate", "desc")
-      ),
-      (snapshot) => {
-        state.invoices = snapshot.docs.map(mapDoc);
-        renderPayments();
-      },
-      handleListenerError("invoices")
-    )
+  const invoicesUnsub = onSnapshot(
+    query(
+      collection(db, "invoices"),
+      where("projectId", "==", state.projectId),
+      orderBy("issueDate", "desc")
+    ),
+    (snapshot) => {
+      state.invoices = snapshot.docs.map(mapDoc);
+      renderPayments();
+    },
+    handleListenerError("invoices")
   );
+  state.unsubscribe.push(invoicesUnsub);
 
-  state.unsubscribe.push(
-    onSnapshot(collection(db, "payments"), (snapshot) => {
+  const paymentsUnsub = onSnapshot(
+    collection(db, "payments"),
+    (snapshot) => {
       state.payments = snapshot.docs.map(mapDoc);
       renderPayments();
-    }, handleListenerError("payments"))
+    },
+    handleListenerError("payments")
   );
+  state.unsubscribe.push(paymentsUnsub);
 
-  state.unsubscribe.push(
-    onSnapshot(
-      query(
-        collection(db, "activityLogs"),
-        where("targetId", "==", state.projectId),
-        orderBy("timestamp", "desc")
-      ),
-      (snapshot) => {
-        state.activities = snapshot.docs.map(mapDoc);
-        renderUpdates();
-      },
-      handleListenerError("activity logs")
-    )
+  const activitiesUnsub = onSnapshot(
+    query(
+      collection(db, "activityLogs"),
+      where("targetId", "==", state.projectId),
+      orderBy("timestamp", "desc")
+    ),
+    (snapshot) => {
+      state.activities = snapshot.docs.map(mapDoc);
+      renderUpdates();
+    },
+    handleListenerError("activity logs")
   );
+  state.unsubscribe.push(activitiesUnsub);
 }
 
 function teardownListeners() {
@@ -622,20 +559,12 @@ function renderAll() {
   renderTimeline();
   renderFiles();
   renderPayments();
-  renderMessages();
   renderUpdates();
   renderTeam();
   renderActionStates();
 }
 
-function renderActionStates() {
-  if (els.chatForm) {
-    const sendBtn = els.chatForm.querySelector('button[type="submit"]');
-    if (sendBtn) {
-      sendBtn.disabled = !state.project;
-    }
-  }
-}
+function renderActionStates() {}
 
 function renderTabs() {
   document.querySelectorAll("#tabs .tab").forEach((btn) => {
@@ -816,34 +745,6 @@ function renderPayments() {
   }).join("");
 }
 
-function renderMessages() {
-  if (!els.chatList) return;
-
-  if (!state.messages.length) {
-    els.chatList.innerHTML = `<div class="empty-state">No messages yet.</div>`;
-    return;
-  }
-
-  els.chatList.innerHTML = state.messages.map((message) => {
-    const isClient = normalizeRole(getUser(message.senderId)?.role) === "client";
-    return `
-      <div class="chat-message ${isClient ? "client" : ""}">
-        <div class="chat-meta">
-          <strong>${escapeHtml(getUserName(getUser(message.senderId)) || "Unknown")}</strong>
-          <span>${formatRelativeTime(
-  message.createdAt
-)}</span>
-        </div>
-        <div>${escapeHtml(message.text|| "")}</div>
-      </div>
-    `;
-  }).join("");
-
-  requestAnimationFrame(() => {
-    els.chatList.scrollTop = els.chatList.scrollHeight;
-  });
-}
-
 function renderUpdates() {
   if (!els.updatesList) return;
 
@@ -929,7 +830,6 @@ function showLoadingState() {
   if (els.timelineList) els.timelineList.innerHTML = `<div class="empty-state">Loading…</div>`;
   if (els.fileGrid) els.fileGrid.innerHTML = `<div class="empty-state">Loading…</div>`;
   if (els.invoiceList) els.invoiceList.innerHTML = `<div class="empty-state">Loading…</div>`;
-  if (els.chatList) els.chatList.innerHTML = `<div class="empty-state">Loading…</div>`;
   if (els.updatesList) els.updatesList.innerHTML = `<div class="empty-state">Loading…</div>`;
   if (els.teamList) els.teamList.innerHTML = `<div class="empty-state">Loading…</div>`;
 }
@@ -1219,7 +1119,7 @@ async function deleteProject() {
     const invoiceIds = state.invoices.map((invoice) => invoice.id);
 
     await deleteRelatedFiles();
-    await deleteCollectionByQuery(query(collection(db, "messages"), where("projectId", "==", projectId)));
+    await deleteProjectConversation(projectId);
     await deleteCollectionByQuery(query(collection(db, "activityLogs"), where("targetId", "==", projectId)));
     await deleteCollectionByQuery(query(collection(db, "invoices"), where("projectId", "==", projectId)));
 
@@ -1269,6 +1169,24 @@ async function deleteCollectionByQuery(queryRef) {
   const batch = writeBatch(db);
   snap.docs.forEach((d) => batch.delete(d.ref));
   await batch.commit();
+}
+
+
+async function deleteProjectConversation(projectId) {
+  const conversationId = projectConversationId(projectId);
+  const convoRef = doc(db, "conversations", conversationId);
+
+  try {
+    await deleteCollectionByQuery(query(collection(db, "conversations", conversationId, "messages")));
+  } catch (error) {
+    console.warn("Failed deleting project conversation messages:", error);
+  }
+
+  try {
+    await deleteDoc(convoRef);
+  } catch (error) {
+    console.warn("Failed deleting project conversation doc:", error);
+  }
 }
 
 async function deletePaymentsByInvoiceIds(invoiceIds) {
@@ -1342,109 +1260,6 @@ async function deleteFile(fileId) {
 function openFile(url) {
   if (!url) return;
   window.open(url, "_blank", "noopener,noreferrer");
-}
-
-async function sendProjectMessage(message) {
-
-  const conversationId =
-    state.project?.projectConversationId;
-
-  if (!conversationId) {
-    alert("Project conversation not found");
-    return;
-  }
-
-  const convoRef =
-    doc(
-      db,
-      "conversations",
-      conversationId
-    );
-
-  const convoSnap =
-    await getDoc(convoRef);
-
-  if (!convoSnap.exists()) {
-    alert("Conversation missing");
-    return;
-  }
-
-  const convo =
-    convoSnap.data();
-
-  const unreadCounts = {
-    ...(convo.unreadCounts || {})
-  };
-
-  (convo.participantIds || [])
-    .forEach(uid => {
-
-      unreadCounts[uid] =
-        uid === state.user.uid
-          ? 0
-          : Number(
-              unreadCounts[uid] || 0
-            ) + 1;
-    });
-
-  const msgRef =
-    doc(
-      collection(
-        db,
-        "conversations",
-        conversationId,
-        "messages"
-      )
-    );
-
-  const batch =
-    writeBatch(db);
-
-  batch.set(msgRef, {
-
-    senderId:
-      state.user.uid,
-
-    senderName:
-      getUserName(
-        state.profile
-      ),
-
-    text:
-      message,
-
-    attachments: [],
-
-    createdAt:
-      serverTimestamp()
-  });
-
-  batch.update(
-    convoRef,
-    {
-
-      lastSenderId:
-        state.user.uid,
-
-      lastSenderName:
-        getUserName(
-          state.profile
-        ),
-
-      lastMessageText:
-        message,
-
-      lastMessageAt:
-        serverTimestamp(),
-
-      unreadCounts,
-
-      updatedAt:
-        serverTimestamp()
-    }
-  );
-
-  await batch.commit();
 }
 
 async function addProjectUpdate(title, details) {
@@ -1557,6 +1372,11 @@ function getProjectRecipientIds() {
   ids.add(state.user?.uid);
 
   return [...ids];
+}
+
+
+function projectConversationId(projectId) {
+  return `project_${String(projectId || "").trim()}`;
 }
 
 async function markInvoicePaid(invoiceId) {
