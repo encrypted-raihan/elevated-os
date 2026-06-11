@@ -3,83 +3,172 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Team Dashboard — Elevated Web Solutions</title>
+  <title>Elevated Web Solutions Portal — Team Dashboard</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
       <div class="brand">
-        <div class="brand-mark">EW</div>
+        <div class="brand-mark">
+          <img
+            src="../../assets/elevatedlogo.png"
+            alt="Elevated Web Solutions"
+            class="brand-logo"
+          />
+        </div>
+
         <div class="brand-content">
           <h2>ELEVATED</h2>
           <p>WEB SOLUTIONS</p>
         </div>
-        <button class="menu-btn" id="closeSidebar" aria-label="Close sidebar" type="button" style="margin-left:auto">✕</button>
       </div>
 
       <nav class="nav">
-        <a class="nav-item active" href="../dashboard/index.html" aria-current="page"><span>Dashboard</span></a>
-        <a class="nav-item" href="../messages/index.html"><span>Messages</span></a>
-        <a class="nav-item" href="../project-workspace/index.html"><span>Project Workspace</span></a>
-        <a class="nav-item" href="../works/index.html"><span>Works</span></a>
+        <a class="nav-item active" href="../dashboard/index.html" aria-current="page">
+          <span>Dashboard</span>
+        </a>
+
+        <a class="nav-item" href="../project-workspace/index.html">
+          <span>Project Workspace</span>
+        </a>
+
+        <a class="nav-item" href="../works/index.html">
+          <span>Works</span>
+        </a>
+
+        <a class="nav-item" href="../messages/index.html">
+          <span>Messages</span>
+        </a>
       </nav>
 
       <div class="sidebar-footer">
-        <button class="logout-btn" type="button">↩ Sign out</button>
+        <button class="logout-btn" type="button">
+          <span aria-hidden="true">↩</span>
+          Sign out
+        </button>
       </div>
     </aside>
 
-    <div class="backdrop hidden" id="backdrop"></div>
+    <div class="backdrop" id="backdrop" hidden></div>
 
     <main class="main">
       <header class="topbar">
         <div class="topbar-left">
-          <button class="menu-btn" id="openSidebar" aria-label="Open sidebar" type="button">☰</button>
+          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar" type="button">
+            <span aria-hidden="true">☰</span>
+          </button>
+
           <div>
-            <div class="eyebrow">TEAM DASHBOARD</div>
-            <h1 id="pageTitle">Loading...</h1>
-            <p id="pageSubtitle">—</p>
+            <p class="eyebrow">Team Dashboard</p>
+            <h1>Welcome Back</h1>
+            <p class="subtext">Loading your workspace…</p>
           </div>
         </div>
-        <div class="topbar-right"><span class="pill good">Ready</span></div>
-      </header>
 
-      <section class="page-grid">
-        <section class="stats-grid" id="statsRoot"></section>
-        <section class="panel">
-          <div class="section-head">
-            <div>
-              <div class="eyebrow">CONTENT</div>
-              <h2>Workspace</h2>
+        <div class="topbar-right">
+          <button class="new-project-btn" id="openWorkspaceBtn" type="button">
+            Open Workspace
+          </button>
+
+          <div class="notification-wrap">
+            <button
+              class="icon-btn bell-btn"
+              id="notificationBtn"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-label="Notifications"
+              type="button"
+            >
+              <svg
+                class="bell-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 01-3.46 0"/>
+              </svg>
+
+              <span class="badge" id="notificationCount">0</span>
+            </button>
+
+            <div class="notification-dropdown" id="notificationDropdown" hidden>
+              <div class="dropdown-title">Notifications</div>
+              <div class="dropdown-list" id="notificationList"></div>
             </div>
           </div>
-          <div id="contentRoot"><div class="layout-two">
-  <section class="panel" style="margin:0">
-    <div class="section-head"><div><div class="eyebrow">WORK</div><h3>Assigned Work</h3></div></div>
-    <div class="list">
-      <div class="list-item">Complete homepage polish</div>
-      <div class="list-item">Fix login redirect issue</div>
-      <div class="list-item">Review client feedback</div>
-    </div>
-  </section>
-  <section class="panel" style="margin:0">
-    <div class="section-head"><div><div class="eyebrow">UPCOMING</div><h3>Next</h3></div></div>
-    <div class="list">
-      <div class="list-item">Deploy staging build</div>
-      <div class="list-item">Prepare weekly report</div>
-      <div class="list-item">Share invoice draft</div>
-    </div>
-  </section>
-</div></div>
-        </section>
+        </div>
+      </header>
+
+      <section class="stats-grid" aria-label="Key performance indicators">
+        <article class="stat-card">
+          <p class="stat-title">Assigned Projects</p>
+          <h2>—</h2>
+          <p class="stat-sub">Loading…</p>
+        </article>
+
+        <article class="stat-card">
+          <p class="stat-title">Active Projects</p>
+          <h2>—</h2>
+          <p class="stat-sub">Loading…</p>
+        </article>
+
+        <article class="stat-card">
+          <p class="stat-title">Recent Messages</p>
+          <h2>—</h2>
+          <p class="stat-sub">Loading…</p>
+        </article>
+
+        <article class="stat-card">
+          <p class="stat-title">Pending Reviews</p>
+          <h2>—</h2>
+          <p class="stat-sub">Loading…</p>
+        </article>
+      </section>
+
+      <section class="panel projects-panel">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">Projects</p>
+            <h3>My Projects</h3>
+          </div>
+        </div>
+
+        <div class="projects-table" id="projectsTable" aria-label="My projects"></div>
+      </section>
+
+      <section class="panel messages-panel">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">Communication</p>
+            <h3>Recent Messages</h3>
+          </div>
+        </div>
+
+        <div class="message-list" id="messageList" aria-label="Recent messages"></div>
+      </section>
+
+      <section class="panel activity-panel">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">Activity</p>
+            <h3>Recent Activity</h3>
+          </div>
+        </div>
+
+        <div class="activity-list" id="activityList" aria-label="Recent activity"></div>
       </section>
     </main>
   </div>
 
-  <script src="script.js"></script>
+  <script type="module" src="./script.js"></script>
 </body>
 </html>
