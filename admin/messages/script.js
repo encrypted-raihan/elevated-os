@@ -1,13 +1,10 @@
 import { auth, db, storage } from "../../js/firebase.js";
 import {
-  addDoc,
   arrayRemove,
   arrayUnion,
   collection,
-  deleteDoc,
   doc,
   getDoc,
-  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -22,7 +19,6 @@ import {
   signOut,
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
 import {
-  deleteObject,
   getDownloadURL,
   ref as storageRef,
   uploadBytes,
@@ -33,9 +29,11 @@ const ROLE_REDIRECTS = {
   admin: "/admin/dashboard/index.html",
   manager: "/team/dashboard/index.html",
   developer: "/team/dashboard/index.html",
-  client: "/client/dashboard/index.html",
   team: "/team/dashboard/index.html",
+  client: "/client/dashboard/index.html",
 };
+
+const INTERNAL_ROLES = new Set(["admin", "manager", "developer", "team"]);
 
 const state = {
   user: null,
@@ -44,7 +42,6 @@ const state = {
   search: "",
   ready: false,
   users: [],
-  projects: [],
   conversations: [],
   conversationMap: new Map(),
   activeId: null,
@@ -53,7 +50,6 @@ const state = {
   pendingAttachments: [],
   convoUnsub: null,
   messagesUnsub: null,
-  projectUnsub: null,
   userUnsub: null,
   pendingOpenId: resolveInitialConversationId(),
 };
@@ -87,12 +83,23 @@ const els = {
 document.addEventListener("DOMContentLoaded", init);
 
 function init() {
+  pruneUnsupportedFilters();
   bindStaticUi();
   showConversationList();
 
   onAuthStateChanged(auth, async (user) => {
     await handleAuthChange(user);
   });
+}
+
+function pruneUnsupportedFilters() {
+  document.querySelectorAll('[data-filter="clients"], [data-filter="projects"]').forEach((btn) => {
+    btn.remove();
+  });
+
+  if (state.filter === "clients" || state.filter === "projects") {
+    state.filter = "all";
+  }
 }
 
 function bindStaticUi() {
@@ -159,6 +166,13 @@ function bindStaticUi() {
   });
 
   document.addEventListener("keydown", (event) => {
+    const card = event.target.closest?.(".conversation-card");
+    if (card && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      openConversation(card.dataset.id, { markRead: true });
+      return;
+    }
+
     if (event.key === "Escape") {
       setSidebar(false);
       closeModalOverlays();
@@ -169,10 +183,10 @@ function bindStaticUi() {
 
 async function handleAuthChange(user) {
   teardownListeners();
+
   state.user = user;
   state.profile = null;
   state.users = [];
-  state.projects = [];
   state.conversations = [];
   state.conversationMap = new Map();
   state.activeId = null;
@@ -188,13 +202,7 @@ async function handleAuthChange(user) {
   try {
     const profile = await loadUserProfile(user.uid);
 
-    if (!profile) {
-      await safeSignOut();
-      window.location.href = LOGIN_ROUTE;
-      return;
-    }
-
-    if (profile.active === false) {
+    if (!profile || profile.active === false) {
       await safeSignOut();
       window.location.href = LOGIN_ROUTE;
       return;
@@ -218,9 +226,8 @@ async function handleAuthChange(user) {
       // non-blocking
     }
 
-    startDirectoryListeners();
+    startUserListener();
     startConversationListener();
-
     renderConversationList();
 
     if (state.pendingOpenId) {
@@ -242,75 +249,37 @@ async function handleAuthChange(user) {
   }
 }
 
-function startDirectoryListeners() {
+function startUserListener() {
   const uid = state.user.uid;
   const role = normalizeRole(state.profile.role);
 
   if (state.userUnsub) state.userUnsub();
-  if (state.projectUnsub) state.projectUnsub();
 
-  if (role === "admin") {
-    state.userUnsub = onSnapshot(
-      query(collection(db, "users")),
-      (snapshot) => {
-        state.users = snapshot.docs.map(mapDoc).filter((u) => isActiveUser(u) || u.id === uid);
-        renderConversationList();
-        if (state.activeConversation) renderConversationHeader();
-      },
-      handleListenerError("users")
-    );
-
-    state.projectUnsub = onSnapshot(
-      query(collection(db, "projects")),
-      (snapshot) => {
-        state.projects = snapshot.docs.map(mapDoc);
-        renderConversationList();
-      },
-      handleListenerError("projects")
-    );
-    return;
-  }
-
-  if (role === "client") {
-    state.userUnsub = onSnapshot(
-      query(collection(db, "users"), where("role", "==", "admin")),
-      (snapshot) => {
-        state.users = snapshot.docs.map(mapDoc).filter(isActiveUser);
-        renderConversationList();
-        if (state.activeConversation) renderConversationHeader();
-      },
-      handleListenerError("admins")
-    );
-
-    state.projectUnsub = onSnapshot(
-      query(collection(db, "projects"), where("clientId", "==", uid)),
-      (snapshot) => {
-        state.projects = snapshot.docs.map(mapDoc);
-        renderConversationList();
-      },
-      handleListenerError("projects")
-    );
-    return;
-  }
+  const userQuery = query(collection(db, "users"));
 
   state.userUnsub = onSnapshot(
-    query(collection(db, "users"), where("role", "==", "admin")),
+    userQuery,
     (snapshot) => {
-      state.users = snapshot.docs.map(mapDoc).filter(isActiveUser);
+      const allUsers = snapshot.docs.map(mapDoc).filter((u) => isActiveUser(u) || u.id === uid);
+      state.users = allUsers.filter((u) => shouldShowUser(u, uid, role));
       renderConversationList();
       if (state.activeConversation) renderConversationHeader();
     },
-    handleListenerError("admins")
+    handleListenerError("users")
   );
+}
 
-  state.projectUnsub = onSnapshot(
-    query(collection(db, "projects"), where("assignedDevelopers", "array-contains", uid)),
-    (snapshot) => {
-      state.projects = snapshot.docs.map(mapDoc);
-      renderConversationList();
-    },
-    handleListenerError("projects")
-  );
+function shouldShowUser(user, currentUid, currentRole) {
+  if (!user || user.id === currentUid) return false;
+
+  const role = normalizeRole(user.role);
+  if (!role) return false;
+
+  if (currentRole === "client") {
+    return role === "admin";
+  }
+
+  return INTERNAL_ROLES.has(role);
 }
 
 function startConversationListener() {
@@ -343,22 +312,22 @@ function startConversationListener() {
   );
 }
 
+
 function teardownListeners() {
   if (typeof state.convoUnsub === "function") state.convoUnsub();
   if (typeof state.messagesUnsub === "function") state.messagesUnsub();
-  if (typeof state.projectUnsub === "function") state.projectUnsub();
   if (typeof state.userUnsub === "function") state.userUnsub();
 
   state.convoUnsub = null;
   state.messagesUnsub = null;
-  state.projectUnsub = null;
   state.userUnsub = null;
 }
 
-async function loadUserProfile(uid) {
-  const snap = await getDoc(doc(db, "users", uid));
-  if (!snap.exists()) return null;
-  return { id: snap.id, ...snap.data() };
+function loadUserProfile(uid) {
+  return getDoc(doc(db, "users", uid)).then((snap) => {
+    if (!snap.exists()) return null;
+    return { id: snap.id, ...snap.data() };
+  });
 }
 
 async function safeSignOut() {
@@ -370,82 +339,57 @@ async function safeSignOut() {
 }
 
 function setFilter(filter) {
-  state.filter = filter;
+  const safeFilter = normalizeFilter(filter);
+  state.filter = safeFilter;
+
   document.querySelectorAll(".filter-pill").forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.filter === filter);
+    btn.classList.toggle("active", btn.dataset.filter === safeFilter);
   });
-  els.activeFilterLabel.textContent = filterLabel(filter);
+
+  els.activeFilterLabel.textContent = filterLabel(safeFilter);
   renderConversationList();
+}
+
+function normalizeFilter(filter) {
+  const value = String(filter || "all").trim().toLowerCase();
+  if (value === "unread" || value === "team" || value === "archived" || value === "all") return value;
+  return "all";
 }
 
 function filterLabel(filter) {
   return {
     all: "All",
     unread: "Unread",
-    clients: "Clients",
     team: "Team",
-    projects: "Projects",
     archived: "Archived",
   }[filter] || "All";
 }
 
 function buildEligibleContacts() {
-  const role = normalizeRole(state.profile?.role);
   const currentUid = state.user?.uid;
-
+  const role = normalizeRole(state.profile?.role);
   if (!currentUid) return [];
 
-  if (role === "admin") {
-    const people = state.users
-      .filter((user) => user.id !== currentUid)
-      .map((user) => ({
-        kind: "direct",
-        id: directConversationId(currentUid, user.id),
-        title: getDisplayName(user) || "Unknown",
-        subtitle: humanizeRole(user.role),
-        badge: user.role,
-        targetUserId: user.id,
-        otherUid: user.id,
-        sortKey: getConversationSortKeyFromId(directConversationId(currentUid, user.id)),
-      }));
-
-    const projects = state.projects.map((project) => ({
-      kind: "project",
-      id: projectConversationId(project.id),
-      title: getProjectTitle(project),
-      subtitle: `Project • ${getProjectClientName(project) || "Client"}`,
-      badge: "project",
-      projectId: project.id,
-      sortKey: getConversationSortKeyFromId(projectConversationId(project.id)),
-    }));
-
-    return [...projects, ...people];
-  }
-
-  if (role === "client") {
-    return state.projects.map((project) => ({
-      kind: "project",
-      id: projectConversationId(project.id),
-      title: getProjectTitle(project),
-      subtitle: `Project • ${humanizeRole(project.status)}`,
-      badge: "project",
-      projectId: project.id,
-      sortKey: getConversationSortKeyFromId(projectConversationId(project.id)),
-    }));
-  }
-
   return state.users
-    .filter((user) => normalizeRole(user.role) === "admin")
-    .map((user) => ({
-      kind: "direct",
-      id: directConversationId(currentUid, user.id),
-      title: getDisplayName(user) || "Admin",
-      subtitle: humanizeRole(user.role),
-      badge: user.role,
-      targetUserId: user.id,
-      otherUid: user.id,
-      sortKey: getConversationSortKeyFromId(directConversationId(currentUid, user.id)),
-    }));
+    .filter((user) => shouldShowUser(user, currentUid, role))
+    .map((user) => {
+      const convoId = directConversationId(currentUid, user.id);
+      return {
+        kind: "direct",
+        id: convoId,
+        title: getDisplayName(user) || "Unknown",
+        subtitle: humanizeRole(user.role) || "Team",
+        badge: normalizeRole(user.role),
+        otherUid: user.id,
+        sortKey: getConversationSortKeyFromId(convoId),
+      };
+    })
+    .sort((a, b) => {
+      const roleRank = (value) => (value === "admin" ? 0 : 1);
+      const roleDiff = roleRank(a.badge) - roleRank(b.badge);
+      if (roleDiff !== 0) return roleDiff;
+      return a.title.localeCompare(b.title, "en", { sensitivity: "base" });
+    });
 }
 
 function getVisibleContacts() {
@@ -462,20 +406,8 @@ function getVisibleContacts() {
       const unread = getUnreadCount(conv, state.user?.uid);
       if (state.filter === "unread" && unread <= 0) return false;
 
-      if (state.filter === "clients") {
-        if (normalizeRole(state.profile?.role) === "admin") {
-          return contact.kind === "project" || normalizeRole(contact.badge) === "client";
-        }
-        return normalizeRole(contact.badge) === "client" || contact.kind === "project";
-      }
-
       if (state.filter === "team") {
-        if (normalizeRole(state.profile?.role) === "client") return false;
-        return contact.kind === "direct" && normalizeRole(contact.badge) !== "client";
-      }
-
-      if (state.filter === "projects") {
-        return contact.kind === "project";
+        return true;
       }
 
       if (!q) return true;
@@ -485,7 +417,9 @@ function getVisibleContacts() {
         contact.subtitle,
         conv?.lastMessageText,
         conv?.lastSenderName,
-      ].join(" ").toLowerCase();
+      ]
+        .join(" ")
+        .toLowerCase();
 
       return haystack.includes(q);
     })
@@ -514,41 +448,42 @@ function renderConversationList() {
     return;
   }
 
-  els.conversationList.innerHTML = visible.map((contact) => {
-    const conv = state.conversationMap.get(contact.id);
-    const unread = getUnreadCount(conv, state.user?.uid);
-    const activeClass = contact.id === state.activeId ? "active" : "";
-    const preview = conv?.lastMessageText || (contact.kind === "project" ? "Project chat ready." : "Tap to start chat.");
-    const timeLabel = conv?.lastMessageAt
-      ? formatRelativeTime(conv.lastMessageAt)
-      : contact.kind === "project"
-        ? "Project"
-        : "New";
+  els.conversationList.innerHTML = visible
+    .map((contact) => {
+      const conv = state.conversationMap.get(contact.id);
+      const unread = getUnreadCount(conv, state.user?.uid);
+      const activeClass = contact.id === state.activeId ? "active" : "";
+      const preview = formatContactPreview(contact);
+      const timeLabel = conv?.lastMessageAt ? formatRelativeTime(conv.lastMessageAt) : "New";
 
-    return `
-      <article class="conversation-card ${activeClass}" tabindex="0" role="button" data-id="${escapeAttr(contact.id)}" aria-label="Open ${escapeAttr(contact.title)}">
-        <div class="avatar" aria-hidden="true">${initials(contact.title)}</div>
-        <div class="card-body">
-          <div class="card-top">
-            <h4 class="card-name">${escapeHtml(contact.title)}</h4>
-            <span class="card-type">${escapeHtml(formatContactType(contact))}</span>
+      return `
+        <article class="conversation-card ${activeClass}" tabindex="0" role="button" data-id="${escapeAttr(contact.id)}" aria-label="Open ${escapeAttr(contact.title)}">
+          <div class="avatar" aria-hidden="true">${initials(contact.title)}</div>
+          <div class="card-body">
+            <div class="card-top">
+              <h4 class="card-name">${escapeHtml(contact.title)}</h4>
+              <span class="card-type">${escapeHtml(formatContactType(contact))}</span>
+            </div>
+            <div class="card-meta">${escapeHtml(contact.subtitle || "")}</div>
+            <p class="card-preview">${escapeHtml(preview)}</p>
+            <div class="card-bottom">
+              <span class="card-time">${escapeHtml(timeLabel)}</span>
+              <span class="unread-badge ${unread ? "" : "hidden"}">${unread}</span>
+            </div>
           </div>
-          <div class="card-meta">${escapeHtml(contact.subtitle || "")}</div>
-          <p class="card-preview">${escapeHtml(preview)}</p>
-          <div class="card-bottom">
-            <span class="card-time">${escapeHtml(timeLabel)}</span>
-            <span class="unread-badge ${unread ? "" : "hidden"}">${unread}</span>
-          </div>
-        </div>
-      </article>
-    `;
-  }).join("");
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function formatContactPreview(contact) {
+  const conv = state.conversationMap.get(contact.id);
+  return conv?.lastMessageText || "Tap to start chat.";
 }
 
 function formatContactType(contact) {
-  if (contact.kind === "project") return "Project";
   if (normalizeRole(contact.badge) === "admin") return "Admin";
-  if (normalizeRole(contact.badge) === "client") return "Client";
   return "Team";
 }
 
@@ -575,7 +510,7 @@ async function openConversation(conversationId, { markRead = true } = {}) {
   );
 
   if (markRead) {
-    markConversationRead(conv.id);
+    await markConversationRead(conv.id);
   }
 
   renderConversationHeader();
@@ -585,60 +520,21 @@ async function openConversation(conversationId, { markRead = true } = {}) {
 
 async function ensureConversation(contact) {
   const uid = state.user?.uid;
-  const role = normalizeRole(state.profile?.role);
   if (!uid) return null;
 
-  if (contact.kind === "direct") {
-    const convoId = directConversationId(uid, contact.otherUid);
-    const convoRef = doc(db, "conversations", convoId);
-    const snap = await getDoc(convoRef);
+  if (contact.kind !== "direct") return null;
 
-    if (!snap.exists()) {
-      const other = state.users.find((u) => u.id === contact.otherUid);
-      const participantIds = [...new Set([uid, contact.otherUid])];
-
-      await setDoc(convoRef, {
-        type: "direct",
-        title:
-            getDisplayName(other) ||
-            contact.title ||
-            "Direct Chat",
-        participantIds,
-        unreadCounts: Object.fromEntries(participantIds.map((id) => [id, 0])),
-        archivedBy: [],
-        lastMessageText: "",
-        lastMessageAt: null,
-        lastSenderId: null,
-        lastSenderName: null,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-    }
-
-    const fresh = await getDoc(convoRef);
-    return fresh.exists() ? normalizeConversation({ id: fresh.id, ...fresh.data() }) : null;
-  }
-
-  const project = state.projects.find((p) => p.id === contact.projectId);
-  if (!project) return null;
-
-  const adminIds = role === "admin"
-    ? [uid, ...state.users.filter((u) => normalizeRole(u.role) === "admin").map((u) => u.id)]
-    : [
-        ...state.users.filter((u) => normalizeRole(u.role) === "admin").map((u) => u.id),
-        uid,
-      ];
-
-  const participantIds = [...new Set([project.clientId, ...adminIds])];
-  const convoId = projectConversationId(project.id);
+  const convoId = directConversationId(uid, contact.otherUid);
   const convoRef = doc(db, "conversations", convoId);
   const snap = await getDoc(convoRef);
 
   if (!snap.exists()) {
+    const other = state.users.find((u) => u.id === contact.otherUid);
+    const participantIds = [...new Set([uid, contact.otherUid])];
+
     await setDoc(convoRef, {
-      type: "project",
-      projectId: project.id,
-      title: getProjectTitle(project),
+      type: "direct",
+      title: getDisplayName(other) || contact.title || "Internal Chat",
       participantIds,
       unreadCounts: Object.fromEntries(participantIds.map((id) => [id, 0])),
       archivedBy: [],
@@ -674,59 +570,25 @@ function renderConversationHeader() {
   if (!conv) return;
 
   els.chatTitle.textContent = conv.title || "Conversation";
-  els.chatBadge.textContent = conv.type === "project" ? "Project Chat" : "Direct Chat";
+  els.chatBadge.textContent = "Internal Chat";
   els.chatParticipants.textContent = buildParticipantsText(conv);
   els.archiveBtn.textContent = isArchivedForMe(conv) ? "Unarchive Chat" : "Archive Chat";
 }
 
 function buildParticipantsText(conv) {
-
   if (!conv) return "";
 
-  if (conv.type === "project") {
-
-    const project = state.projects.find(
-      p => p.id === conv.projectId
-    );
-
-    const client = getUser(project?.clientId);
-
-    const clientName =
-      getDisplayName(client) ||
-      "Client";
-
-    const adminNames = state.users
-      .filter(
-        user =>
-          normalizeRole(user.role) === "admin"
-      )
-      .map(user => getDisplayName(user))
-      .filter(Boolean);
-
-    return [
-      clientName,
-      ...adminNames
-    ].join(" • ");
-  }
-
   const names = (conv.participantIds || [])
-    .map(id => {
+    .map((id) => {
       const user = getUser(id);
-
-      if (
-        id === state.user?.uid &&
-        !user
-      ) {
+      if (id === state.user?.uid && !user) {
         return getDisplayName(state.profile);
       }
-
       return getDisplayName(user);
     })
     .filter(Boolean);
 
-  return names.length
-    ? names.join(" • ")
-    : "Participants";
+  return names.length ? names.join(" • ") : "Participants";
 }
 
 function renderMessages() {
@@ -755,43 +617,45 @@ function renderMessages() {
 
   const currentUid = state.user?.uid;
 
-  els.messagesArea.innerHTML = state.messages.map((message) => {
-    const outgoing = isOutgoingMessage(message, currentUid);
-    const attachments = Array.isArray(message.attachments) ? message.attachments : [];
+  els.messagesArea.innerHTML = state.messages
+    .map((message) => {
+      const outgoing = isOutgoingMessage(message, currentUid);
+      const attachments = Array.isArray(message.attachments) ? message.attachments : [];
 
-    return `
-      <div class="message-row ${outgoing ? "right" : "left"}">
-        <div class="message-bubble">
-          <div class="message-head">
-            <span class="message-sender">${escapeHtml(message.senderName || "Unknown")}</span>
-            <span class="message-time">${escapeHtml(formatRelativeTime(message.createdAt || message.timestamp))}</span>
+      return `
+        <div class="message-row ${outgoing ? "right" : "left"}">
+          <div class="message-bubble">
+            <div class="message-head">
+              <span class="message-sender">${escapeHtml(message.senderName || "Unknown")}</span>
+              <span class="message-time">${escapeHtml(formatRelativeTime(message.createdAt || message.timestamp))}</span>
+            </div>
+
+            <div class="message-text">${escapeHtml(message.text || "")}</div>
+
+            ${
+              attachments.length
+                ? `
+                  <div class="attachments">
+                    ${attachments
+                      .map((file) => `
+                        <a class="attachment-card" href="${escapeAttr(file.url)}" target="_blank" rel="noopener noreferrer">
+                          <span class="file-dot"></span>
+                          <div>
+                            <div class="attachment-name">${escapeHtml(file.name || "Attachment")}</div>
+                            <div class="attachment-type">${escapeHtml(file.type || "File")}</div>
+                          </div>
+                        </a>
+                      `)
+                      .join("")}
+                  </div>
+                `
+                : ""
+            }
           </div>
-
-          <div class="message-text">${escapeHtml(message.text || "")}</div>
-
-          ${
-            attachments.length
-              ? `
-                <div class="attachments">
-                  ${attachments
-                    .map((file) => `
-                      <a class="attachment-card" href="${escapeAttr(file.url)}" target="_blank" rel="noopener noreferrer">
-                        <span class="file-dot"></span>
-                        <div>
-                          <div class="attachment-name">${escapeHtml(file.name || "Attachment")}</div>
-                          <div class="attachment-type">${escapeHtml(file.type || "File")}</div>
-                        </div>
-                      </a>
-                    `)
-                    .join("")}
-                </div>
-              `
-              : ""
-          }
         </div>
-      </div>
-    `;
-  }).join("");
+      `;
+    })
+    .join("");
 
   requestAnimationFrame(() => {
     els.messagesArea.scrollTop = els.messagesArea.scrollHeight;
@@ -799,6 +663,8 @@ function renderMessages() {
 }
 
 function renderPendingAttachments() {
+  if (!els.attachmentPreview) return;
+
   if (!state.pendingAttachments.length) {
     els.attachmentPreview.classList.add("hidden");
     els.attachmentPreview.innerHTML = "";
@@ -806,16 +672,20 @@ function renderPendingAttachments() {
   }
 
   els.attachmentPreview.classList.remove("hidden");
-  els.attachmentPreview.innerHTML = state.pendingAttachments.map((file, index) => `
-    <div class="pending-attachment">
-      <span class="file-dot"></span>
-      <div>
-        <div class="attachment-name">${escapeHtml(file.name)}</div>
-        <div class="attachment-type">${escapeHtml(file.type || "File")}</div>
-      </div>
-      <button class="remove" type="button" data-remove-index="${index}" aria-label="Remove attachment">×</button>
-    </div>
-  `).join("");
+  els.attachmentPreview.innerHTML = state.pendingAttachments
+    .map(
+      (file, index) => `
+        <div class="pending-attachment">
+          <span class="file-dot"></span>
+          <div>
+            <div class="attachment-name">${escapeHtml(file.name)}</div>
+            <div class="attachment-type">${escapeHtml(file.type || "File")}</div>
+          </div>
+          <button class="remove" type="button" data-remove-index="${index}" aria-label="Remove attachment">×</button>
+        </div>
+      `
+    )
+    .join("");
 
   els.attachmentPreview.querySelectorAll("[data-remove-index]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -828,7 +698,6 @@ function renderPendingAttachments() {
 
 async function sendCurrentMessage() {
   const conv = state.activeConversation;
-
   if (!conv) return;
 
   const text = els.messageInput.value.trim();
@@ -839,150 +708,60 @@ async function sendCurrentMessage() {
   setSendBusy(true);
 
   try {
+    const uploadedAttachments = await uploadAttachments(conv.id, files);
 
-    const uploadedAttachments =
-      await uploadAttachments(conv.id, files);
-
-    const convoRef =
-      doc(db, "conversations", conv.id);
-
-    const messageRef =
-      doc(
-        collection(
-          db,
-          "conversations",
-          conv.id,
-          "messages"
-        )
-      );
+    const convoRef = doc(db, "conversations", conv.id);
+    const messageRef = doc(collection(db, "conversations", conv.id, "messages"));
 
     await runTransaction(db, async (tx) => {
-
-      const convoSnap =
-        await tx.get(convoRef);
-
+      const convoSnap = await tx.get(convoRef);
       if (!convoSnap.exists()) {
-        throw new Error(
-          "Conversation not found"
-        );
+        throw new Error("Conversation not found");
       }
 
-      const data =
-        convoSnap.data();
+      const data = convoSnap.data();
+      const participantIds = Array.isArray(data.participantIds) ? data.participantIds : [];
+      const unreadCounts = { ...(data.unreadCounts || {}) };
 
-      const participantIds =
-        Array.isArray(data.participantIds)
-          ? data.participantIds
-          : [];
-
-      const unreadCounts = {
-        ...(data.unreadCounts || {})
-      };
-
-      const messageText =
-        text ||
-        summarizeAttachments(
-          uploadedAttachments
-        );
+      const messageText = text || summarizeAttachments(uploadedAttachments);
 
       participantIds.forEach((id) => {
-
-        unreadCounts[id] =
-          id === state.user.uid
-            ? 0
-            : Number(
-                unreadCounts[id] || 0
-              ) + 1;
-
+        unreadCounts[id] = id === state.user.uid ? 0 : Number(unreadCounts[id] || 0) + 1;
       });
 
       tx.set(messageRef, {
-
-        senderId:
-          state.user.uid,
-
-        senderName:
-          getDisplayName(
-            state.profile
-          ),
-
-        text:
-          messageText,
-
-        attachments:
-          uploadedAttachments,
-
-        createdAt:
-          serverTimestamp(),
-
+        senderId: state.user.uid,
+        senderName: getDisplayName(state.profile),
+        text: messageText,
+        attachments: uploadedAttachments,
+        createdAt: serverTimestamp(),
       });
 
-      const archivedBy =
-        (data.archivedBy || [])
-          .filter(
-            id =>
-              id !== state.user.uid
-          );
+      const archivedBy = (data.archivedBy || []).filter((id) => id !== state.user.uid);
 
       tx.update(convoRef, {
-
         archivedBy,
-
-        lastSenderId:
-          state.user.uid,
-
-        lastSenderName:
-          getDisplayName(
-            state.profile
-          ),
-
-        lastMessageText:
-          messageText,
-
-        lastMessageAt:
-          serverTimestamp(),
-
+        lastSenderId: state.user.uid,
+        lastSenderName: getDisplayName(state.profile),
+        lastMessageText: messageText,
+        lastMessageAt: serverTimestamp(),
         unreadCounts,
-
-        updatedAt:
-          serverTimestamp(),
-
+        updatedAt: serverTimestamp(),
       });
-
     });
 
     state.pendingAttachments = [];
-
     renderPendingAttachments();
 
     els.messageInput.value = "";
+    autosizeTextarea(els.messageInput);
 
-    autosizeTextarea(
-      els.messageInput
-    );
-
-    await markConversationRead(
-      conv.id
-    );
-
-  }
-  catch (error) {
-
-    console.error(
-      "Failed to send message:",
-      error
-    );
-
-    alert(
-      error.message ||
-      "Unable to send message."
-    );
-
-  }
-  finally {
-
+    await markConversationRead(conv.id);
+  } catch (error) {
+    console.error("Failed to send message:", error);
+    alert(error.message || "Unable to send message.");
+  } finally {
     setSendBusy(false);
-
   }
 }
 
@@ -1080,7 +859,7 @@ function setSidebar(open) {
 }
 
 function closeModalOverlays() {
-  els.attachmentPreview?.classList.remove("hidden");
+  // No modal overlays on this page.
 }
 
 function autosizeTextarea(textarea) {
@@ -1095,28 +874,15 @@ function getUnreadCount(conv, uid) {
   return Number(counts[uid] || 0);
 }
 
-function getProjectTitle(project) {
-  return project?.title || project?.name || "Untitled project";
-}
-
 function getUser(userId) {
   if (!userId) return null;
-
-  return state.users.find(user => user.id === userId) || null;
-}
-
-function getProjectClientName(project) {
-  const client = getUser(project?.clientId);
-
-  return client
-    ? getDisplayName(client)
-    : "Unknown Client";
+  return state.users.find((user) => user.id === userId) || null;
 }
 
 function normalizeConversation(conv) {
   return {
     ...conv,
-    type: normalizeRole(conv.type || "project"),
+    type: "direct",
     participantIds: Array.isArray(conv.participantIds) ? conv.participantIds : [],
     unreadCounts: conv.unreadCounts || {},
     archivedBy: Array.isArray(conv.archivedBy) ? conv.archivedBy : [],
@@ -1171,14 +937,17 @@ function formatRelativeTime(value) {
 
 function toDate(value) {
   if (!value) return null;
+
   if (typeof value.toDate === "function") {
     const d = value.toDate();
     return Number.isNaN(d.getTime()) ? null : d;
   }
+
   if (typeof value.seconds === "number") {
     const d = new Date(value.seconds * 1000);
     return Number.isNaN(d.getTime()) ? null : d;
   }
+
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? null : d;
 }
@@ -1227,18 +996,9 @@ function directConversationId(a, b) {
   return `direct_${[a, b].sort().join("__")}`;
 }
 
-function projectConversationId(projectId) {
-  return `project_${projectId}`;
-}
-
 function getConversationSortKeyFromId(id) {
   const conv = state.conversationMap.get(id);
   return toMillis(conv?.lastMessageAt || conv?.updatedAt || conv?.createdAt);
-}
-
-function formatContactPreview(contact) {
-  const conv = state.conversationMap.get(contact.id);
-  return conv?.lastMessageText || (contact.kind === "project" ? "Project chat ready." : "Tap to start chat.");
 }
 
 function escapeHtml(value) {
