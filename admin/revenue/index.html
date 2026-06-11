@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 </head>
 <body>
   <div class="app-shell">
@@ -78,7 +79,7 @@
                 <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
                 <path d="M13.73 21a2 2 0 01-3.46 0"/>
               </svg>
-              <span class="badge" id="notificationCount">3</span>
+              <span class="badge" id="notificationCount">0</span>
             </button>
 
             <div class="notification-dropdown" id="notificationDropdown" hidden>
@@ -92,25 +93,25 @@
       <section class="stats-grid" aria-label="Revenue highlights">
         <article class="stat-card">
           <p class="stat-title">Total Revenue</p>
-          <h2>₹1,250,000</h2>
+          <h2 id="totalRevenueValue">₹0</h2>
           <p class="stat-sub">All-time revenue.</p>
         </article>
 
         <article class="stat-card">
           <p class="stat-title">Collected Revenue</p>
-          <h2>₹850,000</h2>
+          <h2 id="collectedRevenueValue">₹0</h2>
           <p class="stat-sub">Already paid.</p>
         </article>
 
         <article class="stat-card">
           <p class="stat-title">Pending Revenue</p>
-          <h2>₹400,000</h2>
+          <h2 id="pendingRevenueValue">₹0</h2>
           <p class="stat-sub">Awaiting payment.</p>
         </article>
 
         <article class="stat-card">
           <p class="stat-title">Outstanding Invoices</p>
-          <h2 id="outstandingInvoicesCount">5</h2>
+          <h2 id="outstandingInvoicesCount">0</h2>
           <p class="stat-sub">Pending invoices.</p>
         </article>
       </section>
@@ -154,7 +155,7 @@
             <p class="section-kicker">Projects</p>
             <h3>Project Revenue</h3>
           </div>
-          <div class="panel-chip" id="collectionRateChip">60% paid</div>
+          <div class="panel-chip" id="collectionRateChip">0% paid</div>
         </div>
 
         <div class="project-revenue-list" id="projectRevenueList"></div>
@@ -268,6 +269,6 @@
     </div>
   </section>
 
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>

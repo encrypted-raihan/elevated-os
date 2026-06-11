@@ -73,8 +73,6 @@ const state = {
   users: [],
   files: [],
   messages: [],
-  invoices: [],
-  payments: [],
   activities: [],
   activeTab: "overview",
   canEditProject: false,
@@ -86,6 +84,7 @@ const state = {
   ready: false,
   promptCallback: null,
   deletePending: false,
+  syncingPaymentRecords: false,
 };
 
 const el = (id) => document.getElementById(id);
@@ -117,16 +116,11 @@ const els = {
   fileGrid: el("fileGrid"),
   fileInput: el("fileInput"),
   uploadBtn: el("uploadBtn"),
-  paymentBudget: el("paymentBudget"),
-  paymentReceived: el("paymentReceived"),
-  paymentPending: el("paymentPending"),
-  invoiceList: el("invoiceList"),
   updatesList: el("updatesList"),
   teamList: el("teamList"),
   editBtn: el("editBtn"),
   archiveBtn: el("archiveBtn"),
   deleteBtn: el("deleteBtn"),
-  generatePdfBtn: el("generatePdfBtn"),
   addUpdateBtn: el("addUpdateBtn"),
   addMemberBtn: el("addMemberBtn"),
   modalBackdrop: el("modalBackdrop"),
@@ -219,14 +213,7 @@ function bindStaticUi() {
     openDeleteModal();
   });
 
-  els.generatePdfBtn?.addEventListener("click", async () => {
-    if (!state.canCreateInvoices) {
-      alert("You do not have permission to create invoices.");
-      return;
-    }
-    await generateInvoicePdf();
-  });
-
+  
   els.addUpdateBtn?.addEventListener("click", async () => {
     if (!state.canEditProject) {
       alert("You do not have permission to add updates.");
@@ -308,18 +295,6 @@ function bindStaticUi() {
     const deleteFileBtn = target.closest("[data-action='delete-file']");
     if (deleteFileBtn) {
       await deleteFile(deleteFileBtn.dataset.id);
-      return;
-    }
-
-    const payBtn = target.closest("[data-action='mark-paid']");
-    if (payBtn) {
-      await markInvoicePaid(payBtn.dataset.id);
-      return;
-    }
-
-    const pendingBtn = target.closest("[data-action='mark-pending']");
-    if (pendingBtn) {
-      await markInvoicePending(pendingBtn.dataset.id);
       return;
     }
 
@@ -441,8 +416,8 @@ function startListeners() {
     ),
     (snapshot) => {
       state.invoices = snapshot.docs.map(mapDoc);
-      renderPayments();
-    },
+      void syncMissingPaymentsFromPaidInvoices();
+          },
     handleListenerError("invoices")
   );
   state.unsubscribe.push(invoicesUnsub);
@@ -451,8 +426,7 @@ function startListeners() {
     collection(db, "payments"),
     (snapshot) => {
       state.payments = snapshot.docs.map(mapDoc);
-      renderPayments();
-    },
+          },
     handleListenerError("payments")
   );
   state.unsubscribe.push(paymentsUnsub);
@@ -558,8 +532,7 @@ function renderAll() {
   renderPhaseSelect();
   renderTimeline();
   renderFiles();
-  renderPayments();
-  renderUpdates();
+    renderUpdates();
   renderTeam();
   renderActionStates();
 }
@@ -699,51 +672,6 @@ function renderFiles() {
   }).join("");
 }
 
-function renderPayments() {
-  if (!els.invoiceList) return;
-
-  const invoiceIds = new Set(state.invoices.map((invoice) => invoice.id));
-  const received = state.payments
-    .filter((payment) => invoiceIds.has(payment.invoiceId))
-    .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-
-  const pending = Math.max(Number(state.project.budget || 0) - received, 0);
-
-  els.paymentBudget.textContent = formatCurrency(state.project.budget);
-  els.paymentReceived.textContent = formatCurrency(received);
-  els.paymentPending.textContent = formatCurrency(pending);
-
-  if (!state.invoices.length) {
-    els.invoiceList.innerHTML = `<div class="empty-state">No invoices yet. Use “Generate Invoice PDF” to create the first one.</div>`;
-    return;
-  }
-
-  els.invoiceList.innerHTML = state.invoices.map((invoice) => {
-    const paid = normalizeRole(invoice.status) === "paid";
-    const canToggle = state.canCreateInvoices;
-    return `
-      <div class="invoice-card">
-        <div>
-          <div class="invoice-id">${escapeHtml(invoice.invoiceNumber || invoice.id)}</div>
-          <div class="invoice-title">${escapeHtml(invoice.notes || `Invoice for ${state.project.title}`)}</div>
-          <div class="invoice-meta">
-            ${formatCurrency(invoice.amount)} • Issue ${formatDate(invoice.issueDate)} • Due ${formatDate(invoice.dueDate)}
-          </div>
-        </div>
-        <div>
-          <span class="badge ${paid ? "paid" : "pending"}">${paid ? "Paid" : "Pending"}</span>
-        </div>
-        <div></div>
-        <div class="invoice-actions">
-          ${canToggle ? `
-            <button class="small-btn" data-action="mark-paid" data-id="${escapeAttr(invoice.id)}" type="button">Mark Paid</button>
-            <button class="small-btn" data-action="mark-pending" data-id="${escapeAttr(invoice.id)}" type="button">Mark Pending</button>
-          ` : ""}
-        </div>
-      </div>
-    `;
-  }).join("");
-}
 
 function renderUpdates() {
   if (!els.updatesList) return;
@@ -1401,6 +1329,16 @@ async function markInvoicePaid(invoiceId) {
       paymentDate: serverTimestamp(),
       notes: "Marked paid from project workspace",
     });
+  } else {
+    const batch = writeBatch(db);
+    existingPayments.forEach((payment) => {
+      batch.update(doc(db, "payments", payment.id), {
+        amount: Number(invoice.amount || payment.amount || 0),
+        method: payment.method || "manual",
+        notes: payment.notes || "Marked paid from project workspace",
+      });
+    });
+    await batch.commit();
   }
 
   await addProjectActivity("Invoice Paid", `${invoice.invoiceNumber || invoice.id} marked as paid.`);
@@ -1433,10 +1371,7 @@ async function markInvoicePending(invoiceId) {
 async function generateInvoicePdf() {
   if (!state.project || !state.canCreateInvoices) return;
 
-  const invoiceIds = new Set(state.invoices.map((invoice) => invoice.id));
-  const received = state.payments
-    .filter((payment) => invoiceIds.has(payment.invoiceId))
-    .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const received = getProjectReceivedTotal();
 
   const outstanding = Math.max(Number(state.project.budget || 0) - received, 0);
 
