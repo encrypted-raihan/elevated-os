@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Team Messages — Elevated Web Solutions</title>
+  <title>Elevated Web Solutions Portal — Team Messages</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,79 +13,131 @@
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
       <div class="brand">
-        <div class="brand-mark">EW</div>
+        <div class="brand-mark">
+          <img src="../../assets/elevatedlogo.png" alt="Elevated Web Solutions" class="brand-logo" />
+        </div>
+
         <div class="brand-content">
           <h2>ELEVATED</h2>
           <p>WEB SOLUTIONS</p>
         </div>
-        <button class="menu-btn" id="closeSidebar" aria-label="Close sidebar" type="button" style="margin-left:auto">✕</button>
       </div>
 
       <nav class="nav">
         <a class="nav-item" href="../dashboard/index.html"><span>Dashboard</span></a>
-        <a class="nav-item active" href="../messages/index.html" aria-current="page"><span>Messages</span></a>
         <a class="nav-item" href="../project-workspace/index.html"><span>Project Workspace</span></a>
         <a class="nav-item" href="../works/index.html"><span>Works</span></a>
+        <a class="nav-item active" href="../messages/index.html" aria-current="page"><span>Messages</span></a>
       </nav>
 
       <div class="sidebar-footer">
-        <button class="logout-btn" type="button">↩ Sign out</button>
+        <button class="logout-btn" type="button">
+          <span aria-hidden="true">↩</span>
+          Sign out
+        </button>
       </div>
     </aside>
 
-    <div class="backdrop hidden" id="backdrop"></div>
+    <div class="backdrop" id="backdrop" hidden></div>
 
     <main class="main">
       <header class="topbar">
         <div class="topbar-left">
-          <button class="menu-btn" id="openSidebar" aria-label="Open sidebar" type="button">☰</button>
-          <div>
-            <div class="eyebrow">TEAM DASHBOARD</div>
-            <h1 id="pageTitle">Loading...</h1>
-            <p id="pageSubtitle">—</p>
+          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar" type="button">
+            <span aria-hidden="true">☰</span>
+          </button>
+
+          <div class="topbar-copy">
+            <p class="eyebrow">Messages</p>
+            <h1>Inbox</h1>
           </div>
         </div>
-        <div class="topbar-right"><span class="pill good">Ready</span></div>
+
+        <div class="topbar-right">
+          <button class="ghost-action hidden-on-desktop" id="backToListTop" type="button" hidden>← Back to list</button>
+        </div>
       </header>
 
-      <section class="page-grid">
-        <section class="stats-grid" id="statsRoot"></section>
-        <section class="panel">
-          <div class="section-head">
+      <section class="message-app" aria-label="Messages application">
+        <section class="conversation-view" id="conversationView" aria-label="Conversation list">
+          <div class="panel-head">
             <div>
-              <div class="eyebrow">CONTENT</div>
-              <h2>Workspace</h2>
+              <p class="section-kicker">Inbox</p>
+              <h3>All Conversations</h3>
+            </div>
+            <div class="list-meta">
+              <span class="list-chip" id="activeFilterLabel">All</span>
+              <span class="list-chip subtle" id="countLabel">0 chats</span>
             </div>
           </div>
-          <div id="contentRoot"><div class="search-row"><input id="searchInput" placeholder="Search conversations..." /></div>
-<div class="chat-shell">
-  <aside class="thread-list">
-    <div class="section-head" style="margin-bottom:12px"><div><div class="eyebrow">INBOX</div><h2>Conversations</h2></div></div>
-    <div class="thread active"><strong>Rajeev</strong><div class="small" style="margin-top:6px">Admin</div><div style="margin-top:10px;color:var(--muted)">Please update the project timeline.</div></div>
-    <div class="thread"><strong>ShipMoney</strong><div class="small" style="margin-top:6px">Project</div><div style="margin-top:10px;color:var(--muted)">Homepage revision is approved.</div></div>
-    <div class="thread"><strong>Anu</strong><div class="small" style="margin-top:6px">Team</div><div style="margin-top:10px;color:var(--muted)">I finished the banner section.</div></div>
-  </aside>
-  <section class="chat-pane">
-    <div class="chat-header">
-      <div><div class="eyebrow">CHAT</div><h2>Select a chat</h2></div>
-      <span class="pill warn">Dummy UI</span>
-    </div>
-    <div class="chat-body">
-      <div class="message-box"><div class="message-meta"><strong>Rajeev</strong><span>9:12 AM</span></div><div>Please update the project timeline.</div></div>
-      <div class="message-box"><div class="message-meta"><strong>You</strong><span>9:14 AM</span></div><div>Done. I pushed the updated milestones.</div></div>
-      <div class="message-box"><div class="message-meta"><strong>Rajeev</strong><span>9:15 AM</span></div><div>Perfect.</div></div>
-    </div>
-    <div class="composer">
-      <textarea class="chat-input" placeholder="Type a message..."></textarea>
-      <button class="btn primary" type="button" onclick="alert('Dummy send')">Send</button>
-    </div>
-  </section>
-</div></div>
+
+          <div class="search-wrap">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input id="searchInput" type="search" placeholder="Search conversations..." autocomplete="off" />
+          </div>
+
+          <div class="filters" id="filterBar" role="tablist" aria-label="Conversation filters">
+            <button class="filter-pill active" type="button" data-filter="all">All</button>
+            <button class="filter-pill" type="button" data-filter="unread">Unread</button>
+            <button class="filter-pill" type="button" data-filter="admins">Admins</button>
+            <button class="filter-pill" type="button" data-filter="team">Team</button>
+            <button class="filter-pill" type="button" data-filter="archived">Archived</button>
+          </div>
+
+          <div class="conversation-list" id="conversationList" aria-live="polite"></div>
+        </section>
+
+        <section class="chat-view hidden" id="chatView" aria-label="Chat view">
+          <div class="chat-shell">
+            <header class="chat-header">
+              <button class="back-btn" id="backBtn" type="button">← Back</button>
+
+              <div class="chat-header-main">
+                <div class="chat-title-row">
+                  <h2 id="chatTitle">Select a conversation</h2>
+                  <span class="chat-badge" id="chatBadge">Internal Chat</span>
+                </div>
+                <p class="chat-participants" id="chatParticipants">
+                  Choose a conversation from the left to begin messaging.
+                </p>
+              </div>
+
+              <div class="chat-actions">
+                <button class="ghost-action small" type="button" id="searchMessagesBtn">Search Messages</button>
+                <button class="ghost-action small" id="archiveBtn" type="button">Archive Chat</button>
+                <button class="ghost-action small" type="button">More</button>
+              </div>
+            </header>
+
+            <div class="chat-content">
+              <div class="messages-area" id="messagesArea"></div>
+            </div>
+
+            <footer class="composer">
+              <div class="attachment-preview hidden" id="attachmentPreview"></div>
+
+              <div class="composer-row">
+                <label class="attach-btn" for="fileInput">
+                  <input id="fileInput" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.zip,.docx" hidden />
+                  <span>＋</span>
+                  <span>Attach</span>
+                </label>
+
+                <div class="composer-input-wrap">
+                  <textarea id="messageInput" rows="1" placeholder="Type a message..."></textarea>
+                </div>
+
+                <button class="send-btn" id="sendBtn" type="button">Send</button>
+              </div>
+
+              <p class="composer-hint">Allowed attachments: PDF, PNG, JPG, ZIP, DOCX</p>
+            </footer>
+          </div>
         </section>
       </section>
     </main>
   </div>
 
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
