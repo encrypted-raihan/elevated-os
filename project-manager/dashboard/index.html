@@ -20,18 +20,31 @@
           <h2>ELEVATED</h2>
           <p>WEB SOLUTIONS</p>
         </div>
-        <button class="icon-btn sidebar-close" id="closeSidebar" aria-label="Close sidebar" type="button"><span aria-hidden="true">✕</span></button>
+        <button class="icon-btn sidebar-close" id="closeSidebar" aria-label="Close sidebar" type="button">
+          <span aria-hidden="true">✕</span>
+        </button>
       </div>
 
       <nav class="nav">
-        <a class="nav-item active" href="../dashboard/index.html" aria-current="page"><span>Dashboard</span></a>
-        <a class="nav-item" href="../projects/index.html"><span>Projects</span></a>
-        <a class="nav-item" href="../tasks/index.html"><span>Tasks</span></a>
-        <a class="nav-item" href="../messages/index.html"><span>Messages</span></a>
+        <a class="nav-item active" href="../dashboard/index.html" aria-current="page">
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-item" href="../projects/index.html">
+          <span>Projects</span>
+        </a>
+        <a class="nav-item" href="../tasks/index.html">
+          <span>Tasks</span>
+        </a>
+        <a class="nav-item" href="../messages/index.html">
+          <span>Messages</span>
+        </a>
       </nav>
 
       <div class="sidebar-footer">
-        <button class="logout-btn" type="button"><span aria-hidden="true">↩</span>Sign out</button>
+        <button class="logout-btn" type="button">
+          <span aria-hidden="true">↩</span>
+          Sign out
+        </button>
       </div>
     </aside>
 
@@ -40,23 +53,43 @@
     <main class="main">
       <header class="topbar">
         <div class="topbar-left">
-          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar" type="button"><span aria-hidden="true">☰</span></button>
+          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar" type="button">
+            <span aria-hidden="true">☰</span>
+          </button>
           <div>
             <p class="eyebrow">Project Manager Dashboard</p>
-            <h1>Welcome Back</h1>
-            <p class="subtext">Here is what your team is working on.</p>
+            <h1 id="welcomeHeading">Welcome Back</h1>
+            <p class="subtext" id="topbarSubtext">Loading your workspace…</p>
           </div>
         </div>
-        <div class="topbar-actions">
-          <button class="primary-btn" id="openProjectsBtn" type="button">View Projects</button>
+
+        <div class="topbar-right">
+          <a class="new-project-btn" href="../projects/index.html">Projects</a>
+          <a class="new-project-btn" href="../tasks/index.html">Tasks</a>
         </div>
       </header>
 
-      <section class="stats-grid">
-        <article class="stat-card"><p class="stat-title">Managed Projects</p><h2 id="statProjects">0</h2><p class="stat-sub">Projects assigned to you</p></article>
-        <article class="stat-card"><p class="stat-title">Team Members</p><h2 id="statMembers">0</h2><p class="stat-sub">Across all your projects</p></article>
-        <article class="stat-card"><p class="stat-title">Open Tasks</p><h2 id="statOpenTasks">0</h2><p class="stat-sub">Not yet completed</p></article>
-        <article class="stat-card"><p class="stat-title">Avg. Completion</p><h2 id="statProgress">0%</h2><p class="stat-sub">Across managed projects</p></article>
+      <section class="stats-grid" aria-label="Key performance indicators">
+        <article class="stat-card">
+          <p class="stat-title">Managed Projects</p>
+          <h2 id="statProjects">0</h2>
+          <p class="stat-sub">Projects assigned to you</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-title">Team Members</p>
+          <h2 id="statMembers">0</h2>
+          <p class="stat-sub">Across your projects</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-title">Open Tasks</p>
+          <h2 id="statOpenTasks">0</h2>
+          <p class="stat-sub">Not yet completed</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-title">Avg. Completion</p>
+          <h2 id="statProgress">0%</h2>
+          <p class="stat-sub">Across managed projects</p>
+        </article>
       </section>
 
       <section class="panel">
@@ -67,39 +100,30 @@
           </div>
           <a class="text-link" href="../projects/index.html">View all →</a>
         </div>
-        <div class="projects-table">
-          <div class="table-head dashboard-head">
-            <span>Project</span>
-            <span>Client</span>
-            <span>Status</span>
-            <span>Deadline</span>
-            <span>Progress</span>
-            <span></span>
-          </div>
-          <div id="projectsRows"></div>
-        </div>
+
+        <div class="projects-table" id="projectsTable"></div>
       </section>
 
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <p class="section-kicker">Communication</p>
-            <h3>Recent Messages</h3>
+      <div class="bottom-grid">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="section-kicker">Communication</p>
+              <h3>Recent Messages</h3>
+            </div>
           </div>
-          <a class="text-link" href="../messages/index.html">Open Messages →</a>
-        </div>
-        <div class="message-list" id="messageList"></div>
-      </div>
+          <div class="message-list" id="messageList"></div>
+        </section>
 
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <p class="section-kicker">Activity</p>
-            <h3>Recent Activity</h3>
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="section-kicker">Activity</p>
+              <h3>Recent Activity</h3>
+            </div>
           </div>
-          <a class="text-link" href="../tasks/index.html">Open Tasks →</a>
-        </div>
-        <div class="activity-list" id="activityList"></div>
+          <div class="activity-list" id="activityList"></div>
+        </section>
       </div>
     </main>
   </div>
