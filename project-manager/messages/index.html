@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elevated Web Solutions Portal — Messages</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+      <div class="brand">
+        <div class="brand-mark">
+          <img src="../../assets/elevatedlogo.png" alt="Elevated Web Solutions" class="brand-logo" />
+        </div>
+
+        <div class="brand-content">
+          <h2>ELEVATED</h2>
+          <p>WEB SOLUTIONS</p>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav-item" href="../dashboard/index.html"><span>Dashboard</span></a>
+        <a class="nav-item" href="../projects/index.html"><span>Projects</span></a>
+        <a class="nav-item" href="../people/index.html"><span>People</span></a>
+        <a class="nav-item" href="../revenue/index.html"><span>Revenue</span></a>
+        <a class="nav-item active" href="../messages/index.html" aria-current="page"><span>Messages</span></a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" type="button">
+          <span aria-hidden="true">↩</span>
+          Sign out
+        </button>
+      </div>
+    </aside>
+
+    <div class="backdrop" id="backdrop" hidden></div>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar" type="button">
+            <span aria-hidden="true">☰</span>
+          </button>
+
+          <div class="topbar-copy">
+            <p class="eyebrow">Messages</p>
+            <h1>Inbox</h1>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <button class="ghost-action hidden-on-desktop" id="backToListTop" type="button" hidden>← Back to list</button>
+        </div>
+      </header>
+
+      <section class="message-app" aria-label="Messages application">
+        <section class="conversation-view" id="conversationView" aria-label="Conversation list">
+          <div class="panel-head">
+            <div>
+              <p class="section-kicker">Inbox</p>
+              <h3>All Conversations</h3>
+            </div>
+            <div class="list-meta">
+              <span class="list-chip" id="activeFilterLabel">All</span>
+              <span class="list-chip subtle" id="countLabel">0 chats</span>
+            </div>
+          </div>
+
+          <div class="search-wrap">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input id="searchInput" type="search" placeholder="Search conversations..." autocomplete="off" />
+          </div>
+
+          <div class="filters" id="filterBar" role="tablist" aria-label="Conversation filters">
+            <button class="filter-pill active" type="button" data-filter="all">All</button>
+            <button class="filter-pill" type="button" data-filter="unread">Unread</button>
+            <button class="filter-pill" type="button" data-filter="clients">Clients</button>
+            <button class="filter-pill" type="button" data-filter="team">Team</button>
+            <button class="filter-pill" type="button" data-filter="archived">Archived</button>
+          </div>
+
+          <div class="conversation-list" id="conversationList" aria-live="polite"></div>
+        </section>
+
+        <section class="chat-view hidden" id="chatView" aria-label="Chat view">
+          <div class="chat-shell">
+            <header class="chat-header">
+              <button class="back-btn" id="backBtn" type="button">← Back</button>
+
+              <div class="chat-header-main">
+                <div class="chat-title-row">
+                  <h2 id="chatTitle">Select a conversation</h2>
+                  <span class="chat-badge" id="chatBadge">Chat</span>
+                </div>
+                <p class="chat-participants" id="chatParticipants">
+                  Choose a conversation from the left to begin messaging.
+                </p>
+              </div>
+
+              <div class="chat-actions">
+                <button class="ghost-action small" type="button" id="searchMessagesBtn">Search Messages</button>
+                <button class="ghost-action small" id="archiveBtn" type="button">Archive Chat</button>
+                <button class="ghost-action small" type="button">More</button>
+              </div>
+            </header>
+
+            <div class="chat-content">
+              <div class="messages-area" id="messagesArea"></div>
+            </div>
+
+            <footer class="composer">
+              <div class="attachment-preview hidden" id="attachmentPreview"></div>
+
+              <div class="composer-row">
+                <label class="attach-btn" for="fileInput">
+                  <input id="fileInput" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.zip,.docx" hidden />
+                  <span>＋</span>
+                  <span>Attach</span>
+                </label>
+
+                <div class="composer-input-wrap">
+                  <textarea id="messageInput" rows="1" placeholder="Type a message..."></textarea>
+                </div>
+
+                <button class="send-btn" id="sendBtn" type="button">Send</button>
+              </div>
+
+              <p class="composer-hint">Allowed attachments: PDF, PNG, JPG, ZIP, DOCX</p>
+            </footer>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>

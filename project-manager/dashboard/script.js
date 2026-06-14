@@ -2,81 +2,68 @@ import { auth, db } from "../../js/firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
 import {
   collection,
-  query,
-  where,
-  onSnapshot,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
   doc,
+  getDoc,
+  onSnapshot,
+  orderBy,
+  query,
   serverTimestamp,
-  Timestamp,
+  updateDoc,
+  where,
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
-import { requireRole } from "../../js/guards/roleGuard.js";
-import { ROLES } from "../../js/utils/permissions.js";
 
 const LOGIN_ROUTE = "../../index/index.html";
-const ASSIGNABLE_ROLES = new Set([ROLES.DEVELOPER, ROLES.COLD_CALLER]);
-
-const els = {
-  welcomeHeading: document.querySelector(".topbar h1"),
-  topbarSubtext: document.querySelector(".topbar .subtext"),
-  logoutBtn: document.querySelector(".logout-btn"),
-  openSidebarBtn: document.getElementById("openSidebar"),
-  sidebar: document.getElementById("sidebar"),
-  backdrop: document.getElementById("backdrop"),
-
-  statProjects: document.getElementById("statProjects"),
-  statMembers: document.getElementById("statMembers"),
-  statOpenTasks: document.getElementById("statOpenTasks"),
-  statProgress: document.getElementById("statProgress"),
-  projectsRows: document.getElementById("projectsRows"),
-
-  workspaceBackdrop: document.getElementById("workspaceBackdrop"),
-  closeWorkspace: document.getElementById("closeWorkspace"),
-  workspaceTitle: document.getElementById("workspaceTitle"),
-  workspaceClient: document.getElementById("workspaceClient"),
-  tabBtns: document.querySelectorAll(".tab-btn"),
-  tabPanels: document.querySelectorAll(".tab-panel"),
-
-  memberList: document.getElementById("memberList"),
-  addMemberSelect: document.getElementById("addMemberSelect"),
-  addMemberBtn: document.getElementById("addMemberBtn"),
-
-  taskForm: document.getElementById("taskForm"),
-  taskTitle: document.getElementById("taskTitle"),
-  taskAssignee: document.getElementById("taskAssignee"),
-  taskPriority: document.getElementById("taskPriority"),
-  taskDueDate: document.getElementById("taskDueDate"),
-  taskFormError: document.getElementById("taskFormError"),
-  taskList: document.getElementById("taskList"),
-
-  projectStatus: document.getElementById("projectStatus"),
-  projectProgress: document.getElementById("projectProgress"),
-  projectNote: document.getElementById("projectNote"),
-  saveStatusBtn: document.getElementById("saveStatusBtn"),
-  addNoteBtn: document.getElementById("addNoteBtn"),
-  notesFormError: document.getElementById("notesFormError"),
-  noteList: document.getElementById("noteList"),
+const ROLE_REDIRECTS = {
+  admin: "/admin/dashboard/index.html",
+  manager: "/project-manager/dashboard/index.html",
+  developer: "/team/dashboard/index.html",
+  client: "/client/dashboard/index.html",
 };
 
-const state = {
-  uid: null,
-  projects: [],
-  users: [],
-  usersById: new Map(),
-  membersByProject: new Map(),
-  tasksByProject: new Map(),
-  activeProjectId: null,
-  unsubscribe: [],
-};
+const ACTIVE_PROJECT_STATUSES = new Set(["planning", "active", "review", "paused"]);
 
-const dateFormatter = new Intl.DateTimeFormat("en-GB", {
+const currencyFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+
+const shortDateFormatter = new Intl.DateTimeFormat("en-GB", {
   day: "2-digit",
   month: "short",
   year: "numeric",
 });
+
+const els = {
+  projectsTable: document.getElementById("projectsTable"),
+  messageList: document.getElementById("messageList"),
+  activityList: document.getElementById("activityList"),
+  openSidebarBtn: document.getElementById("openSidebar"),
+  sidebar: document.getElementById("sidebar"),
+  backdrop: document.getElementById("backdrop"),
+  logoutBtn: document.querySelector(".logout-btn"),
+  newProjectBtn: document.getElementById("newProjectBtn"),
+  welcomeHeading: document.querySelector(".topbar h1"),
+  topbarSubtext: document.querySelector(".topbar .subtext"),
+  statProjects: document.getElementById("statProjects"),
+  statMembers: document.getElementById("statMembers"),
+  statOpenTasks: document.getElementById("statOpenTasks"),
+  statProgress: document.getElementById("statProgress"),
+};
+
+const state = {
+  uid: null,
+  profile: null,
+  users: [],
+  projects: [],
+  tasks: [],
+  messages: [],
+  activity: [],
+  usersById: new Map(),
+  projectsById: new Map(),
+  unsubscribe: [],
+  ready: false,
+};
 
 document.addEventListener("DOMContentLoaded", init);
 
@@ -85,6 +72,9 @@ function init() {
 
   onAuthStateChanged(auth, async (user) => {
     teardown();
+    state.ready = false;
+    state.uid = null;
+    state.profile = null;
 
     if (!user) {
       window.location.href = LOGIN_ROUTE;
@@ -93,462 +83,65 @@ function init() {
 
     let profile;
     try {
-      profile = await requireRole(user.uid, [ROLES.MANAGER]);
+      profile = await loadProfile(user.uid);
     } catch (err) {
-      console.error("Role check failed:", err);
-      await signOut(auth).catch(() => {});
+      console.error("Profile load failed:", err);
+      await safeSignOut();
       window.location.href = LOGIN_ROUTE;
       return;
     }
 
-    if (!profile) return;
+    if (!profile || profile.active === false) {
+      await safeSignOut();
+      window.location.href = LOGIN_ROUTE;
+      return;
+    }
+
+    const role = normalizeText(profile.role);
+    if (role !== "manager") {
+      await safeSignOut();
+      window.location.href = ROLE_REDIRECTS[role] || LOGIN_ROUTE;
+      return;
+    }
 
     state.uid = user.uid;
+    state.profile = profile;
 
     if (els.welcomeHeading) {
       els.welcomeHeading.textContent = `Welcome Back, ${profile.name || "Manager"}`;
     }
 
-    await loadUsers();
-    startProjectsListener(user.uid);
+    try {
+      await updateDoc(doc(db, "users", user.uid), {
+        lastLogin: serverTimestamp(),
+      });
+    } catch {
+      // Non-blocking.
+    }
+
+    state.ready = true;
+    startListeners(user.uid);
   });
-}
-
-function teardown() {
-  state.unsubscribe.forEach((unsub) => unsub());
-  state.unsubscribe = [];
-  state.projects = [];
-  state.membersByProject = new Map();
-  state.tasksByProject = new Map();
-}
-
-async function loadUsers() {
-  try {
-    const snap = await getDocs(collection(db, "users"));
-    state.users = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    state.usersById = new Map(state.users.map((u) => [u.id, u]));
-  } catch (err) {
-    console.error("Failed to load users:", err);
-  }
-}
-
-function startProjectsListener(uid) {
-  const projectsQuery = query(collection(db, "projects"), where("projectManagerId", "==", uid));
-
-  const unsub = onSnapshot(projectsQuery, (snap) => {
-    state.projects = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    state.projects.forEach((project) => {
-      startMembersListener(project.id);
-      startTasksListener(project.id);
-    });
-    render();
-  }, (err) => console.error("Projects listener error:", err));
-
-  state.unsubscribe.push(unsub);
-}
-
-function startMembersListener(projectId) {
-  const membersQuery = query(collection(db, "projectMembers"), where("projectId", "==", projectId));
-
-  const unsub = onSnapshot(membersQuery, (snap) => {
-    state.membersByProject.set(projectId, snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-    render();
-    if (state.activeProjectId === projectId) renderWorkspace();
-  }, (err) => console.error("Members listener error:", err));
-
-  state.unsubscribe.push(unsub);
-}
-
-function startTasksListener(projectId) {
-  const tasksQuery = query(collection(db, "tasks"), where("projectId", "==", projectId));
-
-  const unsub = onSnapshot(tasksQuery, (snap) => {
-    state.tasksByProject.set(projectId, snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-    render();
-    if (state.activeProjectId === projectId) renderWorkspace();
-  }, (err) => console.error("Tasks listener error:", err));
-
-  state.unsubscribe.push(unsub);
-}
-
-function startNotesListener(projectId) {
-  const notesQuery = query(collection(db, "projectNotes"), where("projectId", "==", projectId));
-
-  const unsub = onSnapshot(notesQuery, (snap) => {
-    const notes = snap.docs
-      .map((d) => ({ id: d.id, ...d.data() }))
-      .sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
-    renderNotes(notes);
-  }, (err) => console.error("Notes listener error:", err));
-
-  state.unsubscribe.push(unsub);
-  return unsub;
-}
-
-function render() {
-  const totalProjects = state.projects.length;
-
-  let totalMembers = 0;
-  let totalProgress = 0;
-  let openTasks = 0;
-
-  state.projects.forEach((project) => {
-    const members = state.membersByProject.get(project.id) || [];
-    const tasks = state.tasksByProject.get(project.id) || [];
-
-    totalMembers += members.length;
-    totalProgress += Number(project.progress || 0);
-    openTasks += tasks.filter((t) => t.status !== "completed").length;
-  });
-
-  setText(els.statProjects, totalProjects);
-  setText(els.statMembers, totalMembers);
-  setText(els.statOpenTasks, openTasks);
-  setText(els.statProgress, totalProjects ? `${Math.round(totalProgress / totalProjects)}%` : "0%");
-
-  renderProjectsTable();
-}
-
-function renderProjectsTable() {
-  if (!els.projectsRows) return;
-
-  if (state.projects.length === 0) {
-    els.projectsRows.innerHTML = `<div class="empty-row">No projects have been assigned to you yet. Once Admin assigns a project, it will appear here.</div>`;
-    return;
-  }
-
-  els.projectsRows.innerHTML = state.projects
-    .map((project) => {
-      const due = project.dueDate ? dateFormatter.format(toDate(project.dueDate)) : "—";
-      const progress = Number(project.progress || 0);
-      return `
-        <div class="pm-row" data-project="${project.id}">
-          <div>
-            <p class="lead-name">${escapeHtml(project.title || project.name || "Untitled project")}</p>
-            <p class="lead-sub">${(state.membersByProject.get(project.id) || []).length} member(s)</p>
-          </div>
-          <div>${escapeHtml(project.clientId ? (state.usersById.get(project.clientId)?.name || project.clientId) : "—")}</div>
-          <div><span class="status-badge status-${escapeHtml(project.status || "new")}">${formatStatus(project.status)}</span></div>
-          <div><span class="priority-badge priority-${escapeHtml(project.priority || "medium")}">${formatStatus(project.priority || "medium")}</span></div>
-          <div>${due}</div>
-          <div class="progress-wrap">
-            <div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>
-            <span>${progress}%</span>
-          </div>
-          <div class="lead-actions">
-            <button class="row-btn" data-open="${project.id}" type="button">Open</button>
-          </div>
-        </div>
-      `;
-    })
-    .join("");
-}
-
-function openWorkspace(projectId) {
-  const project = state.projects.find((p) => p.id === projectId);
-  if (!project) return;
-
-  state.activeProjectId = projectId;
-  els.workspaceTitle.textContent = project.title || project.name || "Project";
-  els.workspaceClient.textContent = `Client: ${state.usersById.get(project.clientId)?.name || project.clientId || "—"} · Deadline: ${project.dueDate ? dateFormatter.format(toDate(project.dueDate)) : "—"}`;
-
-  els.projectStatus.value = project.status || "planning";
-  els.projectProgress.value = project.progress || 0;
-  els.projectNote.value = "";
-  els.notesFormError.hidden = true;
-  els.taskFormError.hidden = true;
-  els.taskForm.reset();
-
-  startNotesListener(projectId);
-  switchTab("team");
-  renderWorkspace();
-
-  els.workspaceBackdrop.hidden = false;
-}
-
-function closeWorkspace() {
-  if (!els.workspaceBackdrop) return;
-
-  els.workspaceBackdrop.hidden = true;
-  state.activeProjectId = null;
-
-  if (els.noteList) els.noteList.innerHTML = "";
-  if (els.taskList) els.taskList.innerHTML = "";
-  if (els.memberList) els.memberList.innerHTML = "";
-
-  if (els.taskFormError) els.taskFormError.hidden = true;
-  if (els.notesFormError) els.notesFormError.hidden = true;
-}
-
-function switchTab(tab) {
-  els.tabBtns.forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tab));
-  els.tabPanels.forEach((panel) => panel.classList.toggle("active", panel.dataset.panel === tab));
-}
-
-function renderWorkspace() {
-  if (!state.activeProjectId) return;
-
-  renderMembers();
-  renderAddMemberOptions();
-  renderTaskAssigneeOptions();
-  renderTasks();
-}
-
-function renderMembers() {
-  const members = state.membersByProject.get(state.activeProjectId) || [];
-
-  if (members.length === 0) {
-    els.memberList.innerHTML = `<p class="empty-state">No team members assigned yet. Add programmers or cold callers below.</p>`;
-    return;
-  }
-
-  els.memberList.innerHTML = members
-    .map((member) => {
-      const user = state.usersById.get(member.userId);
-      return `
-        <div class="member-row">
-          <div class="member-meta">
-            <span class="member-name">${escapeHtml(user?.name || member.userId)}</span>
-            <span class="member-role">${escapeHtml(formatStatus(user?.role || member.role))}</span>
-          </div>
-          <button class="row-btn" data-remove-member="${member.id}" type="button">Remove</button>
-        </div>
-      `;
-    })
-    .join("");
-}
-
-function renderAddMemberOptions() {
-  const members = state.membersByProject.get(state.activeProjectId) || [];
-  const assignedIds = new Set(members.map((m) => m.userId));
-
-  const candidates = state.users.filter(
-    (u) => ASSIGNABLE_ROLES.has((u.role || "").toLowerCase()) && !assignedIds.has(u.id)
-  );
-
-  if (candidates.length === 0) {
-    els.addMemberSelect.innerHTML = `<option value="">No available staff to add</option>`;
-    els.addMemberBtn.disabled = true;
-    return;
-  }
-
-  els.addMemberBtn.disabled = false;
-  els.addMemberSelect.innerHTML = candidates
-    .map((u) => `<option value="${u.id}">${escapeHtml(u.name || u.email || u.id)} — ${escapeHtml(formatStatus(u.role))}</option>`)
-    .join("");
-}
-
-function renderTaskAssigneeOptions() {
-  const members = state.membersByProject.get(state.activeProjectId) || [];
-
-  if (members.length === 0) {
-    els.taskAssignee.innerHTML = `<option value="">Unassigned</option>`;
-    return;
-  }
-
-  els.taskAssignee.innerHTML =
-    `<option value="">Unassigned</option>` +
-    members
-      .map((m) => {
-        const user = state.usersById.get(m.userId);
-        return `<option value="${m.userId}">${escapeHtml(user?.name || m.userId)}</option>`;
-      })
-      .join("");
-}
-
-function renderTasks() {
-  const tasks = (state.tasksByProject.get(state.activeProjectId) || [])
-    .slice()
-    .sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
-
-  if (tasks.length === 0) {
-    els.taskList.innerHTML = `<p class="empty-state">No tasks yet. Create the first task above.</p>`;
-    return;
-  }
-
-  els.taskList.innerHTML = tasks
-    .map((task) => {
-      const assignee = task.assignedTo ? state.usersById.get(task.assignedTo)?.name || task.assignedTo : "Unassigned";
-      const due = task.dueDate ? dateFormatter.format(toDate(task.dueDate)) : "No due date";
-      return `
-        <div class="task-item">
-          <div class="task-meta">
-            <p class="task-title">${escapeHtml(task.title)}</p>
-            <p class="task-sub">
-              <span class="priority-badge priority-${escapeHtml(task.priority || "medium")}">${formatStatus(task.priority || "medium")}</span>
-              · ${escapeHtml(assignee)} · Due ${due}
-            </p>
-          </div>
-          <div style="display:flex; gap:8px; align-items:center;">
-            <select class="task-status-select" data-task-status="${task.id}">
-              <option value="todo" ${task.status === "todo" ? "selected" : ""}>To Do</option>
-              <option value="in_progress" ${task.status === "in_progress" ? "selected" : ""}>In Progress</option>
-              <option value="review" ${task.status === "review" ? "selected" : ""}>Review</option>
-              <option value="completed" ${task.status === "completed" ? "selected" : ""}>Completed</option>
-            </select>
-            <button class="row-btn" data-remove-task="${task.id}" type="button">Delete</button>
-          </div>
-        </div>
-      `;
-    })
-    .join("");
-}
-
-function renderNotes(notes) {
-  if (notes.length === 0) {
-    els.noteList.innerHTML = `<p class="empty-state">No notes or status updates yet.</p>`;
-    return;
-  }
-
-  els.noteList.innerHTML = notes
-    .map((note) => `
-      <div class="note-item">
-        <p class="note-time">${dateFormatter.format(toDate(note.createdAt))} · ${escapeHtml(state.usersById.get(note.createdBy)?.name || "You")}</p>
-        <p>${escapeHtml(note.message)}</p>
-      </div>
-    `)
-    .join("");
-}
-
-async function addMember() {
-  const userId = els.addMemberSelect.value;
-  if (!userId || !state.activeProjectId) return;
-
-  const user = state.usersById.get(userId);
-
-  try {
-    await addDoc(collection(db, "projectMembers"), {
-      projectId: state.activeProjectId,
-      userId,
-      role: user?.role || "developer",
-      assignedBy: state.uid,
-      assignedAt: serverTimestamp(),
-    });
-  } catch (err) {
-    console.error("Failed to add member:", err);
-  }
-}
-
-async function removeMember(membershipId) {
-  try {
-    await deleteDoc(doc(db, "projectMembers", membershipId));
-  } catch (err) {
-    console.error("Failed to remove member:", err);
-  }
-}
-
-async function handleTaskSubmit(event) {
-  event.preventDefault();
-  if (!state.activeProjectId) return;
-
-  const title = els.taskTitle.value.trim();
-  if (!title) {
-    showError(els.taskFormError, "Please enter a task title.");
-    return;
-  }
-
-  try {
-    await addDoc(collection(db, "tasks"), {
-      projectId: state.activeProjectId,
-      title,
-      description: "",
-      assignedTo: els.taskAssignee.value || null,
-      priority: els.taskPriority.value,
-      status: "todo",
-      dueDate: els.taskDueDate.value ? Timestamp.fromDate(new Date(els.taskDueDate.value)) : null,
-      createdBy: state.uid,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-
-    els.taskForm.reset();
-    els.taskPriority.value = "medium";
-    els.taskFormError.hidden = true;
-  } catch (err) {
-    console.error("Failed to create task:", err);
-    showError(els.taskFormError, "Could not create this task. Please try again.");
-  }
-}
-
-async function updateTaskStatus(taskId, status) {
-  try {
-    await updateDoc(doc(db, "tasks", taskId), { status, updatedAt: serverTimestamp() });
-  } catch (err) {
-    console.error("Failed to update task status:", err);
-  }
-}
-
-async function removeTask(taskId) {
-  try {
-    await deleteDoc(doc(db, "tasks", taskId));
-  } catch (err) {
-    console.error("Failed to delete task:", err);
-  }
-}
-
-async function saveProjectStatus() {
-  if (!state.activeProjectId) return;
-
-  const progress = Math.max(0, Math.min(100, Number(els.projectProgress.value) || 0));
-
-  try {
-    await updateDoc(doc(db, "projects", state.activeProjectId), {
-      status: els.projectStatus.value,
-      progress,
-      updatedAt: serverTimestamp(),
-    });
-    els.notesFormError.hidden = true;
-  } catch (err) {
-    console.error("Failed to save project status:", err);
-    showError(els.notesFormError, "Could not save project status.");
-  }
-}
-
-async function addProjectNote() {
-  if (!state.activeProjectId) return;
-
-  const message = els.projectNote.value.trim();
-  if (!message) {
-    showError(els.notesFormError, "Write a note before saving.");
-    return;
-  }
-
-  try {
-    await addDoc(collection(db, "projectNotes"), {
-      projectId: state.activeProjectId,
-      message,
-      createdBy: state.uid,
-      createdAt: serverTimestamp(),
-    });
-    els.projectNote.value = "";
-    els.notesFormError.hidden = true;
-  } catch (err) {
-    console.error("Failed to add note:", err);
-    showError(els.notesFormError, "Could not save this note.");
-  }
 }
 
 function bindUi() {
-  // ==========================
-  // Logout
-  // ==========================
   if (els.logoutBtn) {
     els.logoutBtn.addEventListener("click", async () => {
-      await signOut(auth).catch(() => {});
+      await safeSignOut();
       window.location.href = LOGIN_ROUTE;
     });
   }
 
-  // ==========================
-  // Mobile Sidebar
-  // ==========================
-  if (els.openSidebarBtn && els.sidebar) {
+  if (els.newProjectBtn) {
+    els.newProjectBtn.addEventListener("click", () => {
+      window.location.href = "../projects/index.html";
+    });
+  }
+
+  if (els.openSidebarBtn && els.sidebar && els.backdrop) {
     els.openSidebarBtn.addEventListener("click", () => {
       els.sidebar.classList.add("open");
-
-      if (els.backdrop) {
-        els.backdrop.hidden = false;
-      }
+      els.backdrop.hidden = false;
     });
   }
 
@@ -559,196 +152,595 @@ function bindUi() {
     });
   }
 
-  // ==========================
-  // Open Project Workspace
-  // ==========================
-  if (els.projectsRows) {
-    els.projectsRows.addEventListener("click", (event) => {
-      const openBtn = event.target.closest("[data-open]");
-
-      if (openBtn) {
-        openWorkspace(openBtn.dataset.open);
-      }
-    });
-  }
-
-  // ==========================
-  // Close Workspace
-  // ==========================
-  if (els.closeWorkspace) {
-    els.closeWorkspace.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      closeWorkspace();
-    });
-  }
-
-  // Close when clicking outside modal
-  if (els.workspaceBackdrop) {
-    els.workspaceBackdrop.addEventListener("click", (event) => {
-      if (event.target === els.workspaceBackdrop) {
-        closeWorkspace();
-      }
-    });
-  }
-
-  // ==========================
-  // Workspace Tabs
-  // ==========================
-  els.tabBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      switchTab(btn.dataset.tab);
-    });
-  });
-
-  // ==========================
-  // Team Members
-  // ==========================
-  if (els.addMemberBtn) {
-    els.addMemberBtn.addEventListener("click", addMember);
-  }
-
-  if (els.memberList) {
-    els.memberList.addEventListener("click", (event) => {
-      const removeBtn = event.target.closest("[data-remove-member]");
-
-      if (removeBtn) {
-        removeMember(removeBtn.dataset.removeMember);
-      }
-    });
-  }
-
-  // ==========================
-  // Tasks
-  // ==========================
-  if (els.taskForm) {
-    els.taskForm.addEventListener("submit", handleTaskSubmit);
-  }
-
-  if (els.taskList) {
-    els.taskList.addEventListener("change", (event) => {
-      const select = event.target.closest("[data-task-status]");
-
-      if (select) {
-        updateTaskStatus(select.dataset.taskStatus, select.value);
-      }
-    });
-
-    els.taskList.addEventListener("click", (event) => {
-      const removeBtn = event.target.closest("[data-remove-task]");
-
-      if (removeBtn) {
-        removeTask(removeBtn.dataset.removeTask);
-      }
-    });
-  }
-
-  // ==========================
-  // Project Status & Notes
-  // ==========================
-  if (els.saveStatusBtn) {
-    els.saveStatusBtn.addEventListener("click", saveProjectStatus);
-  }
-
-  if (els.addNoteBtn) {
-    els.addNoteBtn.addEventListener("click", addProjectNote);
-  }
-
-  // ==========================
-  // ESC Key closes Workspace
-  // ==========================
   document.addEventListener("keydown", (event) => {
-    if (
-      event.key === "Escape" &&
-      els.workspaceBackdrop &&
-      !els.workspaceBackdrop.hidden
-    ) {
-      closeWorkspace();
+    if (event.key === "Escape" && els.sidebar) {
+      els.sidebar.classList.remove("open");
+      if (els.backdrop) els.backdrop.hidden = true;
     }
   });
 
-
-  if (els.openSidebarBtn && els.sidebar) {
-    els.openSidebarBtn.addEventListener("click", () => {
-      els.sidebar.classList.add("open");
-      if (els.backdrop) els.backdrop.hidden = false;
+  if (els.projectsTable) {
+    els.projectsTable.addEventListener("click", (event) => {
+      const openBtn = event.target.closest("[data-open-project]");
+      if (openBtn) {
+        openProject(openBtn.dataset.openProject);
+      }
     });
   }
-
-  if (els.backdrop && els.sidebar) {
-    els.backdrop.addEventListener("click", () => {
-      els.sidebar.classList.remove("open");
-      els.backdrop.hidden = true;
-    });
-  }
-
-  if (els.projectsRows) {
-    els.projectsRows.addEventListener("click", (event) => {
-      const openBtn = event.target.closest("[data-open]");
-      if (openBtn) openWorkspace(openBtn.dataset.open);
-    });
-  }
-
-  if (els.closeWorkspace) els.closeWorkspace.addEventListener("click", closeWorkspace);
-
-  els.tabBtns.forEach((btn) => {
-    btn.addEventListener("click", () => switchTab(btn.dataset.tab));
-  });
-
-  if (els.addMemberBtn) els.addMemberBtn.addEventListener("click", addMember);
-
-  if (els.memberList) {
-    els.memberList.addEventListener("click", (event) => {
-      const removeBtn = event.target.closest("[data-remove-member]");
-      if (removeBtn) removeMember(removeBtn.dataset.removeMember);
-    });
-  }
-
-  if (els.taskForm) els.taskForm.addEventListener("submit", handleTaskSubmit);
-
-  if (els.taskList) {
-    els.taskList.addEventListener("change", (event) => {
-      const select = event.target.closest("[data-task-status]");
-      if (select) updateTaskStatus(select.dataset.taskStatus, select.value);
-    });
-
-    els.taskList.addEventListener("click", (event) => {
-      const removeBtn = event.target.closest("[data-remove-task]");
-      if (removeBtn) removeTask(removeBtn.dataset.removeTask);
-    });
-  }
-
-  if (els.saveStatusBtn) els.saveStatusBtn.addEventListener("click", saveProjectStatus);
-  if (els.addNoteBtn) els.addNoteBtn.addEventListener("click", addProjectNote);
 }
 
-function toDate(value) {
-  if (!value) return new Date(0);
-  if (typeof value.toDate === "function") return value.toDate();
-  if (value instanceof Date) return value;
-  return new Date(value);
+function startListeners(uid) {
+  renderLoadingState();
+
+  state.unsubscribe.push(
+    onSnapshot(collection(db, "users"), (snapshot) => {
+      state.users = snapshot.docs.map(mapDoc);
+      state.usersById = buildMap(state.users);
+      render();
+    }, handleListenerError("users"))
+  );
+
+  state.unsubscribe.push(
+    onSnapshot(
+      query(collection(db, "projects"), where("projectManagerId", "==", uid)),
+      (snapshot) => {
+        state.projects = snapshot.docs.map(mapDoc);
+        state.projectsById = buildMap(state.projects);
+        render();
+      },
+      handleListenerError("projects")
+    )
+  );
+
+  state.unsubscribe.push(
+    onSnapshot(
+      collection(db, "tasks"),
+      (snapshot) => {
+        state.tasks = snapshot.docs.map(mapDoc);
+        render();
+      },
+      handleListenerError("tasks")
+    )
+  );
+
+  state.unsubscribe.push(
+    onSnapshot(
+      query(collection(db, "messages"), orderBy("timestamp", "desc")),
+      (snapshot) => {
+        state.messages = snapshot.docs.map(mapDoc);
+        renderMessages();
+      },
+      handleListenerError("messages")
+    )
+  );
+
+  state.unsubscribe.push(
+    onSnapshot(
+      query(collection(db, "activityLogs"), orderBy("timestamp", "desc")),
+      (snapshot) => {
+        state.activity = snapshot.docs.map(mapDoc);
+        renderActivity();
+      },
+      handleListenerError("activity logs")
+    )
+  );
+}
+
+function teardown() {
+  while (state.unsubscribe.length) {
+    const unsubscribe = state.unsubscribe.pop();
+    try {
+      unsubscribe();
+    } catch {
+      // Ignore teardown problems.
+    }
+  }
+  state.projects = [];
+  state.tasks = [];
+  state.messages = [];
+  state.activity = [];
+  state.users = [];
+  state.usersById = new Map();
+  state.projectsById = new Map();
+}
+
+async function loadProfile(uid) {
+  const snap = await getDoc(doc(db, "users", uid));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() };
+}
+
+async function safeSignOut() {
+  try {
+    await signOut(auth);
+  } catch {
+    // Ignore.
+  }
+}
+
+function render() {
+  if (!state.ready) return;
+
+  renderStats();
+  renderProjects();
+  renderMessages();
+  renderActivity();
+  renderTopbarSubtitle();
+}
+
+function renderStats() {
+  const projectIds = new Set(state.projects.map((project) => project.id));
+  const managedProjects = state.projects.length;
+  const teamMembers = countUniqueTeamMembers(state.projects);
+  const openTasks = state.tasks.filter((task) => projectIds.has(task.projectId) && normalizeText(task.status) !== "completed").length;
+  const avgProgress = managedProjects
+    ? Math.round(state.projects.reduce((sum, project) => sum + Number(project.progress || 0), 0) / managedProjects)
+    : 0;
+
+  setText(els.statProjects, managedProjects);
+  setText(els.statMembers, teamMembers);
+  setText(els.statOpenTasks, openTasks);
+  setText(els.statProgress, `${avgProgress}%`);
+}
+
+function renderTopbarSubtitle() {
+  if (!els.topbarSubtext) return;
+
+  const activeProjects = state.projects.filter((project) => ACTIVE_PROJECT_STATUSES.has(normalizeText(project.status))).length;
+  const openTasks = state.tasks.filter((task) => normalizeText(task.status) !== "completed" && state.projects.some((project) => project.id === task.projectId)).length;
+  const messageCount = state.messages.filter((message) => isRelevantMessage(message)).length;
+
+  els.topbarSubtext.textContent = `${activeProjects} active projects · ${openTasks} open tasks · ${messageCount} relevant messages`;
+}
+
+function renderProjects() {
+  if (!els.projectsTable) return;
+
+  const sorted = [...state.projects].sort((a, b) => getTimeMs(b.updatedAt || b.createdAt) - getTimeMs(a.updatedAt || a.createdAt));
+  const rows = sorted.slice(0, 6);
+
+  const fragment = document.createDocumentFragment();
+  fragment.appendChild(createProjectHeadRow());
+
+  if (rows.length === 0) {
+    fragment.appendChild(createStateBlock("No projects have been assigned to you yet."));
+    els.projectsTable.replaceChildren(fragment);
+    return;
+  }
+
+  for (const project of rows) {
+    fragment.appendChild(createProjectRow(project));
+  }
+
+  els.projectsTable.replaceChildren(fragment);
+}
+
+function renderMessages() {
+  if (!els.messageList) return;
+
+  const rows = [...state.messages].filter(isRelevantMessage).slice(0, 5);
+  const fragment = document.createDocumentFragment();
+
+  if (rows.length === 0) {
+    els.messageList.replaceChildren(createStateBlock("No messages available"));
+    return;
+  }
+
+  for (const message of rows) {
+    const sender = state.usersById.get(message.senderId);
+    const receiver = state.usersById.get(message.receiverId);
+    const project = state.projectsById.get(message.projectId);
+
+    fragment.appendChild(
+      createMessageItem({
+        projectName: getProjectTitle(project),
+        senderName: getDisplayName(sender) || getDisplayName(receiver) || "Unknown sender",
+        preview: truncateText(message.message, 120),
+        time: formatRelativeTime(message.timestamp),
+      })
+    );
+  }
+
+  els.messageList.replaceChildren(fragment);
+}
+
+function renderActivity() {
+  if (!els.activityList) return;
+
+  const rows = [...state.activity].filter(isRelevantActivity).slice(0, 10);
+  const fragment = document.createDocumentFragment();
+
+  if (rows.length === 0) {
+    els.activityList.replaceChildren(createStateBlock("No recent activity"));
+    return;
+  }
+
+  for (const item of rows) {
+    const actor = state.usersById.get(item.userId);
+    const project = getProjectForActivity(item);
+
+    fragment.appendChild(
+      createActivityItem({
+        title: item.action || "Update",
+        text: buildActivityDescription(item, project),
+        projectName: project ? getProjectTitle(project) : humanize(item.targetType || "activity"),
+        creatorName: getDisplayName(actor) || "System",
+        time: formatRelativeTime(item.timestamp),
+      })
+    );
+  }
+
+  els.activityList.replaceChildren(fragment);
+}
+
+function createProjectHeadRow() {
+  const row = document.createElement("div");
+  row.className = "project-head-row";
+
+  ["Project", "Client", "Status", "Open Tasks", "Deadline", "Progress", ""].forEach((label) => {
+    const cell = document.createElement("div");
+    cell.textContent = label;
+    row.appendChild(cell);
+  });
+
+  return row;
+}
+
+function createProjectRow(project) {
+  const row = document.createElement("div");
+  row.className = "project-row";
+  row.tabIndex = 0;
+  row.setAttribute("role", "link");
+  row.setAttribute("aria-label", `Open ${getProjectTitle(project)}`);
+
+  const client = state.usersById.get(project.clientId);
+  const projectTitle = getProjectTitle(project);
+  const clientName = getDisplayName(client) || "Unknown client";
+  const progressValue = clampNumber(project.progress, 0, 100);
+  const taskCount = state.tasks.filter((task) => task.projectId === project.id).length;
+  const openTaskCount = state.tasks.filter((task) => task.projectId === project.id && normalizeText(task.status) !== "completed").length;
+
+  const titleCell = document.createElement("div");
+  titleCell.className = "project-name";
+  titleCell.textContent = projectTitle;
+
+  const clientCell = document.createElement("div");
+  clientCell.className = "project-client";
+  clientCell.textContent = clientName;
+
+  const statusCell = document.createElement("div");
+  statusCell.className = "project-phase";
+  statusCell.textContent = humanize(project.status);
+
+  const tasksCell = document.createElement("div");
+  tasksCell.className = "project-phase";
+  tasksCell.textContent = `${openTaskCount}/${taskCount}`;
+
+  const dueCell = document.createElement("div");
+  dueCell.className = "project-due";
+  dueCell.textContent = formatDateOrDash(project.dueDate);
+
+  const progressCell = document.createElement("div");
+  progressCell.className = "project-progress";
+
+  const progressWrap = document.createElement("div");
+  progressWrap.className = "progress-wrap";
+
+  const progressLabel = document.createElement("span");
+  progressLabel.textContent = `${progressValue}%`;
+
+  const progressTrack = document.createElement("div");
+  progressTrack.className = "progress-track";
+  progressTrack.setAttribute("aria-hidden", "true");
+
+  const progressFill = document.createElement("div");
+  progressFill.className = "progress-fill";
+  progressFill.style.width = `${progressValue}%`;
+
+  progressTrack.appendChild(progressFill);
+  progressWrap.append(progressLabel, progressTrack);
+  progressCell.appendChild(progressWrap);
+
+  const linkCell = document.createElement("div");
+  linkCell.className = "project-link";
+  linkCell.setAttribute("aria-hidden", "true");
+  linkCell.textContent = "↗";
+
+  row.append(titleCell, clientCell, statusCell, tasksCell, dueCell, progressCell, linkCell);
+
+  const open = () => openProject(project.id);
+  row.addEventListener("click", open);
+  row.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      open();
+    }
+  });
+
+  return row;
+}
+
+function createMessageItem({ projectName, senderName, preview, time }) {
+  const item = document.createElement("article");
+  item.className = "message-item";
+
+  const top = document.createElement("div");
+  top.className = "message-top";
+
+  const left = document.createElement("div");
+  const project = createCell("div", "message-project", projectName);
+  const sender = createCell("div", "message-sender", senderName);
+  left.append(project, sender);
+
+  const timeEl = createCell("div", "message-time", time);
+  top.append(left, timeEl);
+
+  const previewEl = document.createElement("p");
+  previewEl.className = "message-preview";
+  previewEl.textContent = preview || "No message text";
+
+  item.append(top, previewEl);
+  return item;
+}
+
+function createActivityItem({ title, text, projectName, creatorName, time }) {
+  const item = document.createElement("article");
+  item.className = "activity-item";
+
+  const marker = document.createElement("span");
+  marker.className = "activity-marker";
+  marker.setAttribute("aria-hidden", "true");
+
+  const meta = document.createElement("div");
+  meta.className = "activity-meta";
+
+  const top = document.createElement("div");
+  top.className = "activity-top";
+
+  const left = document.createElement("div");
+  const activityTitle = createCell("div", "activity-title", title);
+  const activityText = createCell("div", "activity-text", text);
+  left.append(activityTitle, activityText);
+
+  const timeEl = createCell("div", "activity-time", time);
+  top.append(left, timeEl);
+
+  const projectLine = document.createElement("div");
+  projectLine.className = "activity-text";
+  projectLine.textContent = `${projectName} · ${creatorName}`;
+
+  meta.append(top, projectLine);
+  item.append(marker, meta);
+  return item;
+}
+
+function createCell(tag, className, text) {
+  const node = document.createElement(tag);
+  node.className = className;
+  node.textContent = text;
+  return node;
+}
+
+function createStateBlock(message) {
+  const block = document.createElement("div");
+  block.className = "empty-state";
+  block.textContent = message;
+  return block;
+}
+
+function renderLoadingState() {
+  setText(els.statProjects, "—");
+  setText(els.statMembers, "—");
+  setText(els.statOpenTasks, "—");
+  setText(els.statProgress, "—");
+
+  if (els.projectsTable) {
+    const fragment = document.createDocumentFragment();
+    fragment.appendChild(createProjectHeadRow());
+    fragment.appendChild(createStateBlock("Connecting to Firebase…"));
+    els.projectsTable.replaceChildren(fragment);
+  }
+
+  if (els.messageList) {
+    els.messageList.replaceChildren(createStateBlock("Connecting to Firebase…"));
+  }
+
+  if (els.activityList) {
+    els.activityList.replaceChildren(createStateBlock("Connecting to Firebase…"));
+  }
+
+  if (els.topbarSubtext) {
+    els.topbarSubtext.textContent = "Connecting to Firebase…";
+  }
+}
+
+function openProject(projectId) {
+  try {
+    sessionStorage.setItem("ews:selectedProjectId", projectId);
+  } catch {
+    // Ignore storage failures.
+  }
+  window.location.href = "../projects/index.html";
+}
+
+function isRelevantMessage(message) {
+  if (!message) return false;
+  const projectIds = new Set(state.projects.map((project) => project.id));
+  return (
+    message.senderId === state.uid ||
+    message.receiverId === state.uid ||
+    projectIds.has(message.projectId)
+  );
+}
+
+function isRelevantActivity(item) {
+  if (!item) return false;
+  const projectIds = new Set(state.projects.map((project) => project.id));
+  if (item.userId === state.uid) return true;
+  if (projectIds.has(item.targetId)) return true;
+
+  if (item.targetType === "task" && item.targetId) {
+    const task = state.tasks.find((t) => t.id === item.targetId);
+    return task ? projectIds.has(task.projectId) : false;
+  }
+
+  if (item.targetType === "invoice" && item.targetId) {
+    const invoiceProject = state.projects.find((project) => project.id === item.projectId || project.id === item.targetId);
+    return Boolean(invoiceProject);
+  }
+
+  return false;
+}
+
+function getProjectForActivity(item) {
+  if (!item) return null;
+
+  if (item.projectId && state.projectsById.has(item.projectId)) {
+    return state.projectsById.get(item.projectId);
+  }
+
+  if (item.targetType === "project" && state.projectsById.has(item.targetId)) {
+    return state.projectsById.get(item.targetId);
+  }
+
+  if (item.targetType === "task") {
+    const task = state.tasks.find((t) => t.id === item.targetId);
+    if (task) return state.projectsById.get(task.projectId) || null;
+  }
+
+  return null;
+}
+
+function buildActivityDescription(item, project) {
+  const targetLabel = project ? getProjectTitle(project) : humanize(item.targetType || "activity");
+  const action = item.action || "Updated item";
+  return `${action} · ${targetLabel}`;
+}
+
+function countUniqueTeamMembers(projects) {
+  const ids = new Set();
+  for (const project of projects) {
+    for (const developerId of project.assignedDevelopers || []) {
+      if (developerId) ids.add(developerId);
+    }
+  }
+  return ids.size;
 }
 
 function setText(el, value) {
   if (el) el.textContent = value;
 }
 
-function showError(el, message) {
-  if (!el) return;
-  el.textContent = message;
-  el.hidden = false;
+function handleListenerError(label) {
+  return (error) => {
+    console.error(`Firestore listener error (${label}):`, error);
+  };
 }
 
-function formatStatus(status) {
-  return String(status || "—").replace(/_/g, " ");
+function buildMap(items) {
+  return new Map(items.map((item) => [item.id, item]));
 }
 
-function escapeHtml(str) {
-  return String(str ?? "").replace(/[&<>"']/g, (ch) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
-  }[ch]));
+function mapDoc(snapshot) {
+  return { id: snapshot.id, ...snapshot.data() };
+}
+
+function getDisplayName(user) {
+  if (!user) return "";
+  return (
+    user.name ||
+    user.displayName ||
+    user.fullName ||
+    user.username ||
+    user.email?.split("@")[0] ||
+    ""
+  );
+}
+
+function getProjectTitle(project) {
+  if (!project) return "Unknown project";
+  return project.title || project.name || project.projectName || "Untitled project";
+}
+
+function humanize(value) {
+  return String(value || "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (ch) => ch.toUpperCase());
+}
+
+function formatDateOrDash(value) {
+  const date = toDate(value);
+  return date ? shortDateFormatter.format(date) : "—";
+}
+
+function formatRelativeTime(value) {
+  const date = toDate(value);
+  if (!date) return "Just now";
+
+  const diffMs = Date.now() - date.getTime();
+  const diffMinutes = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMinutes < 1) return "Just now";
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+
+  return shortDateFormatter.format(date);
+}
+
+function truncateText(text, maxLength) {
+  const str = String(text || "");
+  if (str.length <= maxLength) return str;
+  return `${str.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
+function normalizeText(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function clampNumber(value, min, max) {
+  const number = Number(value);
+  if (Number.isNaN(number)) return min;
+  return Math.max(min, Math.min(max, number));
+}
+
+function getTimeMs(value) {
+  const date = toDate(value);
+  return date ? date.getTime() : 0;
+}
+
+function toDate(value) {
+  if (!value) return null;
+  if (typeof value.toDate === "function") {
+    const date = value.toDate();
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+  if (typeof value === "number") {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+  if (typeof value === "string") {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+  if (typeof value === "object" && typeof value.seconds === "number") {
+    const date = new Date(value.seconds * 1000);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+  return null;
+}
+
+function isCurrentMonth(value) {
+  const date = toDate(value);
+  if (!date) return false;
+
+  const now = new Date();
+  return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
 }

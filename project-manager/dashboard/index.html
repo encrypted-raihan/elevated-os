@@ -4,12 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Elevated Web Solutions Portal — Project Manager Dashboard</title>
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../cold-caller/leads/style.css" />
-  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../base.css" />
 </head>
 <body>
   <div class="app-shell">
@@ -22,19 +20,18 @@
           <h2>ELEVATED</h2>
           <p>WEB SOLUTIONS</p>
         </div>
+        <button class="icon-btn sidebar-close" id="closeSidebar" aria-label="Close sidebar" type="button"><span aria-hidden="true">✕</span></button>
       </div>
 
       <nav class="nav">
-        <a class="nav-item active" href="../dashboard/index.html" aria-current="page">
-          <span>Dashboard</span>
-        </a>
+        <a class="nav-item active" href="../dashboard/index.html" aria-current="page"><span>Dashboard</span></a>
+        <a class="nav-item" href="../projects/index.html"><span>Projects</span></a>
+        <a class="nav-item" href="../tasks/index.html"><span>Tasks</span></a>
+        <a class="nav-item" href="../messages/index.html"><span>Messages</span></a>
       </nav>
 
       <div class="sidebar-footer">
-        <button class="logout-btn" type="button">
-          <span aria-hidden="true">↩</span>
-          Sign out
-        </button>
+        <button class="logout-btn" type="button"><span aria-hidden="true">↩</span>Sign out</button>
       </div>
     </aside>
 
@@ -43,38 +40,23 @@
     <main class="main">
       <header class="topbar">
         <div class="topbar-left">
-          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar" type="button">
-            <span aria-hidden="true">☰</span>
-          </button>
+          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar" type="button"><span aria-hidden="true">☰</span></button>
           <div>
             <p class="eyebrow">Project Manager Dashboard</p>
             <h1>Welcome Back</h1>
             <p class="subtext">Here is what your team is working on.</p>
           </div>
         </div>
+        <div class="topbar-actions">
+          <button class="primary-btn" id="openProjectsBtn" type="button">View Projects</button>
+        </div>
       </header>
 
       <section class="stats-grid">
-        <div class="stat-card">
-          <p class="stat-title">Managed Projects</p>
-          <h2 id="statProjects">0</h2>
-          <p class="stat-sub">Projects assigned to you</p>
-        </div>
-        <div class="stat-card">
-          <p class="stat-title">Team Members</p>
-          <h2 id="statMembers">0</h2>
-          <p class="stat-sub">Across all your projects</p>
-        </div>
-        <div class="stat-card">
-          <p class="stat-title">Open Tasks</p>
-          <h2 id="statOpenTasks">0</h2>
-          <p class="stat-sub">Not yet completed</p>
-        </div>
-        <div class="stat-card">
-          <p class="stat-title">Avg. Completion</p>
-          <h2 id="statProgress">0%</h2>
-          <p class="stat-sub">Across managed projects</p>
-        </div>
+        <article class="stat-card"><p class="stat-title">Managed Projects</p><h2 id="statProjects">0</h2><p class="stat-sub">Projects assigned to you</p></article>
+        <article class="stat-card"><p class="stat-title">Team Members</p><h2 id="statMembers">0</h2><p class="stat-sub">Across all your projects</p></article>
+        <article class="stat-card"><p class="stat-title">Open Tasks</p><h2 id="statOpenTasks">0</h2><p class="stat-sub">Not yet completed</p></article>
+        <article class="stat-card"><p class="stat-title">Avg. Completion</p><h2 id="statProgress">0%</h2><p class="stat-sub">Across managed projects</p></article>
       </section>
 
       <section class="panel">
@@ -83,14 +65,13 @@
             <p class="section-kicker">Your Workload</p>
             <h3>Managed Projects</h3>
           </div>
+          <a class="text-link" href="../projects/index.html">View all →</a>
         </div>
-
-        <div class="leads-table" id="projectsTable">
-          <div class="leads-head-row pm-head">
+        <div class="projects-table">
+          <div class="table-head dashboard-head">
             <span>Project</span>
             <span>Client</span>
             <span>Status</span>
-            <span>Priority</span>
             <span>Deadline</span>
             <span>Progress</span>
             <span></span>
@@ -98,90 +79,31 @@
           <div id="projectsRows"></div>
         </div>
       </section>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">Communication</p>
+            <h3>Recent Messages</h3>
+          </div>
+          <a class="text-link" href="../messages/index.html">Open Messages →</a>
+        </div>
+        <div class="message-list" id="messageList"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">Activity</p>
+            <h3>Recent Activity</h3>
+          </div>
+          <a class="text-link" href="../tasks/index.html">Open Tasks →</a>
+        </div>
+        <div class="activity-list" id="activityList"></div>
+      </div>
     </main>
   </div>
 
-  <!-- Project Workspace Modal -->
-  <div class="modal-backdrop" id="workspaceBackdrop" hidden>
-    <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="workspaceTitle">
-      <div class="modal-header">
-        <div>
-          <h3 id="workspaceTitle">Project</h3>
-          <p class="modal-subtext" id="workspaceClient"></p>
-        </div>
-        <button class="icon-btn" id="closeWorkspace" type="button" aria-label="Close">✕</button>
-      </div>
-
-      <div class="workspace-tabs">
-        <button class="tab-btn active" data-tab="team" type="button">Team</button>
-        <button class="tab-btn" data-tab="tasks" type="button">Tasks</button>
-        <button class="tab-btn" data-tab="notes" type="button">Notes &amp; Status</button>
-      </div>
-
-      <!-- TEAM TAB -->
-      <div class="tab-panel active" data-panel="team">
-        <p class="modal-subtext">Assign programmers and cold callers to this project. Changes save instantly.</p>
-        <div class="member-list" id="memberList"></div>
-
-        <div class="add-member-row">
-          <select id="addMemberSelect"></select>
-          <button class="row-btn" id="addMemberBtn" type="button">Add to project</button>
-        </div>
-      </div>
-
-      <!-- TASKS TAB -->
-      <div class="tab-panel" data-panel="tasks">
-        <form id="taskForm" class="task-form">
-          <input type="text" id="taskTitle" placeholder="New task title…" required />
-          <select id="taskAssignee"></select>
-          <select id="taskPriority">
-            <option value="low">Low</option>
-            <option value="medium" selected>Medium</option>
-            <option value="high">High</option>
-            <option value="urgent">Urgent</option>
-          </select>
-          <input type="date" id="taskDueDate" />
-          <button class="primary-btn" type="submit">Add Task</button>
-        </form>
-        <p class="form-error" id="taskFormError" hidden></p>
-
-        <div class="task-list" id="taskList"></div>
-      </div>
-
-      <!-- NOTES TAB -->
-      <div class="tab-panel" data-panel="notes">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="projectStatus">Project Status</label>
-            <select id="projectStatus">
-              <option value="planning">Planning</option>
-              <option value="active">Active</option>
-              <option value="review">Review</option>
-              <option value="completed">Completed</option>
-              <option value="paused">Paused</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="projectProgress">Completion (%)</label>
-            <input type="number" id="projectProgress" min="0" max="100" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="projectNote">Add Progress Note / Blocker</label>
-          <textarea id="projectNote" rows="3" placeholder="Status update, blocker, or note…"></textarea>
-        </div>
-        <div class="modal-actions" style="justify-content: space-between;">
-          <button class="ghost-btn-lg" id="saveStatusBtn" type="button">Save Status</button>
-          <button class="primary-btn" id="addNoteBtn" type="button">Add Note</button>
-        </div>
-        <p class="form-error" id="notesFormError" hidden></p>
-
-        <div class="note-list" id="noteList"></div>
-      </div>
-    </div>
-  </div>
-
-  <script type="module" src="script.js"></script>
+  <script type="module" src="./script.js"></script>
 </body>
 </html>

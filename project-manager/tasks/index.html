@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elevated Web Solutions Portal — Project Manager Tasks</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../base.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+      <div class="brand">
+        <div class="brand-mark">
+          <img src="../../assets/elevatedlogo.png" alt="Elevated Web Solutions" class="brand-logo" />
+        </div>
+        <div class="brand-content">
+          <h2>ELEVATED</h2>
+          <p>WEB SOLUTIONS</p>
+        </div>
+        <button class="icon-btn sidebar-close" id="closeSidebar" aria-label="Close sidebar" type="button"><span aria-hidden="true">✕</span></button>
+      </div>
+
+      <nav class="nav">
+        <a class="nav-item" href="../dashboard/index.html"><span>Dashboard</span></a>
+        <a class="nav-item" href="../projects/index.html"><span>Projects</span></a>
+        <a class="nav-item active" href="../tasks/index.html" aria-current="page"><span>Tasks</span></a>
+        <a class="nav-item" href="../messages/index.html"><span>Messages</span></a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" type="button"><span aria-hidden="true">↩</span>Sign out</button>
+      </div>
+    </aside>
+
+    <div class="backdrop" id="backdrop" hidden></div>
+
+    <main class="main">
+      <header class="page-header">
+        <div class="topbar-left">
+          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar" type="button"><span aria-hidden="true">☰</span></button>
+          <div>
+            <div class="eyebrow">TASKS</div>
+            <h1>Task Board</h1>
+            <p>Create, assign, track, and close tasks across all managed projects.</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="primary-btn" id="refreshBtn" type="button">Refresh</button>
+        </div>
+      </header>
+
+      <section class="stats-grid">
+        <article class="stat-card"><p class="stat-title">Total Tasks</p><h2 id="statTotal">0</h2><p class="stat-sub">Across your projects</p></article>
+        <article class="stat-card"><p class="stat-title">To Do</p><h2 id="statTodo">0</h2><p class="stat-sub">Waiting to start</p></article>
+        <article class="stat-card"><p class="stat-title">In Progress</p><h2 id="statProgress">0</h2><p class="stat-sub">Currently moving</p></article>
+        <article class="stat-card"><p class="stat-title">Completed</p><h2 id="statCompleted">0</h2><p class="stat-sub">Done and delivered</p></article>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">CREATE TASK</p>
+            <h3>New Task</h3>
+          </div>
+        </div>
+        <form id="taskForm" class="form-grid">
+          <div class="form-group"><label for="projectSelect">Project</label><select id="projectSelect" required></select></div>
+          <div class="form-group"><label for="taskTitle">Title</label><input id="taskTitle" type="text" placeholder="Task title" required /></div>
+          <div class="form-group span-2"><label for="taskDescription">Description</label><textarea id="taskDescription" rows="3" placeholder="Task details..."></textarea></div>
+          <div class="form-group"><label for="taskAssignee">Assignee</label><select id="taskAssignee"></select></div>
+          <div class="form-group"><label for="taskPriority">Priority</label><select id="taskPriority"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="urgent">Urgent</option></select></div>
+          <div class="form-group"><label for="taskDueDate">Due Date</label><input id="taskDueDate" type="date" /></div>
+          <div class="form-group"><label>&nbsp;</label><button class="primary-btn" type="submit">Add Task</button></div>
+        </form>
+        <p class="form-error" id="taskFormError" hidden></p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">BOARD</p>
+            <h3>Task Pipeline</h3>
+          </div>
+        </div>
+        <div class="board" id="board"></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./script.js"></script>
+</body>
+</html>
