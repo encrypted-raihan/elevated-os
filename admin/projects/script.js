@@ -17,17 +17,18 @@ import {
   where
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-const LOGIN_ROUTE = "/index/index.html";
+const LOGIN_ROUTE = "../../index/index.html";
 const ROLE_REDIRECTS = {
-  admin: "/admin/dashboard/index.html",
-  manager: "/team/dashboard/index.html",
-  developer: "/team/dashboard/index.html",
-  client: "/client/dashboard/index.html",
-  team: "/team/dashboard/index.html",
+  admin:       "/admin/dashboard/index.html",
+  manager:     "/project-manager/dashboard/index.html",
+  developer:   "/team/dashboard/index.html",
+  cold_caller: "/cold-caller/dashboard/index.html",
+  client:      "/client/dashboard/index.html",
+  team:        "/team/dashboard/index.html",
 };
 
 const ACTIVE_STATUSES = new Set(["planning", "development", "testing", "review", "active"]);
-const TEAM_ROLES = new Set(["admin", "manager", "developer"]);
+const TEAM_ROLES = new Set(["admin", "manager", "developer", "cold_caller"]);
 
 const state = {
   user: null,

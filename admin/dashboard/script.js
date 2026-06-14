@@ -13,16 +13,17 @@ import {
   where,
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-const LOGIN_ROUTE = "/index/index.html";
+const LOGIN_ROUTE = "../../index/index.html";
 const ROLE_REDIRECTS = {
-  admin: "/admin/dashboard/index.html",
-  manager: "/team/dashboard/index.html",
-  developer: "/team/dashboard/index.html",
-  client: "/client/dashboard/index.html",
+  admin:       "/admin/dashboard/index.html",
+  manager:     "/project-manager/dashboard/index.html",
+  developer:   "/team/dashboard/index.html",
+  cold_caller: "/cold-caller/dashboard/index.html",
+  client:      "/client/dashboard/index.html",
 };
 
 const ACTIVE_PROJECT_STATUSES = new Set(["planning", "active", "review", "paused"]);
-const TEAM_ROLES = new Set(["admin", "manager", "developer"]);
+const TEAM_ROLES = new Set(["admin", "manager", "developer", "cold_caller"]);
 
 const currencyFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
@@ -60,6 +61,7 @@ const state = {
   users: [],
   projects: [],
   invoices: [],
+  leads: [],
   messages: [],
   activity: [],
   notifications: [],
@@ -246,6 +248,18 @@ function startRealtimeListeners(uid) {
       handleListenerError("notifications")
     )
   );
+
+  // ── Leads: power the sales/CRM stats row ────────────────────────
+  state.unsubscribe.push(
+    onSnapshot(
+      collection(db, "leads"),
+      (snapshot) => {
+        state.leads = snapshot.docs.map(mapDoc);
+        renderLeadStats();
+      },
+      handleListenerError("leads")
+    )
+  );
 }
 
 function teardownListeners() {
@@ -277,6 +291,7 @@ function renderDashboard() {
   if (!state.ready) return;
 
   renderStats();
+  renderLeadStats();
   renderProjects();
   renderMessages();
   renderActivity();
@@ -606,6 +621,23 @@ function createStateBlock(message) {
   block.style.background = "rgba(255,255,255,0.02)";
   block.textContent = message;
   return block;
+}
+
+function renderLeadStats() {
+  const total      = state.leads.length;
+  const interested = state.leads.filter((l) => l.status === "interested").length;
+  const confirmed  = state.leads.filter((l) => l.status === "confirmed_client").length;
+  const rate       = total ? Math.round((confirmed / total) * 100) : 0;
+
+  const setText = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+
+  setText("statTotalLeads",      total);
+  setText("statInterestedLeads", interested);
+  setText("statConfirmedLeads",  confirmed);
+  setText("statConversionRate",  `${rate}%`);
 }
 
 function showLoadingState() {

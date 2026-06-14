@@ -13,16 +13,17 @@ import {
   updateDoc,
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-const LOGIN_ROUTE = "/index/index.html";
+const LOGIN_ROUTE = "../../index/index.html";
 const ROLE_REDIRECTS = {
   admin: "/admin/dashboard/index.html",
-  manager: "/team/dashboard/index.html",
+  manager: "/project-manager/dashboard/index.html",
+  cold_caller: "/cold-caller/dashboard/index.html",
   developer: "/team/dashboard/index.html",
   client: "/client/dashboard/index.html",
   team: "/team/dashboard/index.html",
 };
 
-const TEAM_ROLES = new Set(["admin", "manager", "developer", "team"]);
+const TEAM_ROLES = new Set(["admin", "manager", "developer", "cold_caller", "team"]);
 const ACTIVE_PROJECT_STATUSES = new Set(["planning", "active", "review", "design", "development", "testing"]);
 
 const state = {
@@ -781,6 +782,8 @@ function getRelatedProjectsForUser(user) {
     const assigned = Array.isArray(project.assignedDevelopers) && project.assignedDevelopers.includes(user.id);
     const managed = project.projectManagerId === user.id;
 
+    // projectMembers collection — state may not include this on the people page,
+    // so we also fall back to the legacy assignedDevelopers array.
     return assigned || managed;
   });
 }

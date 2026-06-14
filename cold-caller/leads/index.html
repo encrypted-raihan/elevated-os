@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elevated Web Solutions Portal — My Leads</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../dashboard/style.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+      <div class="brand">
+        <div class="brand-mark">
+          <img src="../../assets/elevatedlogo.png" alt="Elevated Web Solutions" class="brand-logo" />
+        </div>
+        <div class="brand-content">
+          <h2>ELEVATED</h2>
+          <p>WEB SOLUTIONS</p>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav-item" href="../dashboard/index.html">
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-item active" href="../leads/index.html" aria-current="page">
+          <span>My Leads</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" type="button">
+          <span aria-hidden="true">↩</span>
+          Sign out
+        </button>
+      </div>
+    </aside>
+
+    <div class="backdrop" id="backdrop" hidden></div>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar" type="button">
+            <span aria-hidden="true">☰</span>
+          </button>
+          <div>
+            <p class="eyebrow">Cold Caller CRM</p>
+            <h1>My Leads</h1>
+            <p class="subtext">Manage your assigned leads and daily call logs.</p>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <button class="new-project-btn" id="addLeadBtn" type="button">+ New Lead</button>
+        </div>
+      </header>
+
+      <section class="stats-grid">
+        <div class="stat-card">
+          <p class="stat-title">Total Leads</p>
+          <h2 id="statTotal">0</h2>
+          <p class="stat-sub">All assigned leads</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-title">Follow-up Needed</p>
+          <h2 id="statFollowUp">0</h2>
+          <p class="stat-sub">Awaiting next call</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-title">Interested %</p>
+          <h2 id="statInterestedPct">0%</h2>
+          <p class="stat-sub">Of total leads</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-title">Confirmed %</p>
+          <h2 id="statConfirmedPct">0%</h2>
+          <p class="stat-sub">Conversion to client</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">Pipeline</p>
+            <h3>Lead List</h3>
+          </div>
+          <div class="filter-bar">
+            <input type="search" id="searchInput" placeholder="Search name, phone, business…" />
+            <select id="statusFilter">
+              <option value="">All statuses</option>
+              <option value="not_answered">Not Answered</option>
+              <option value="interested">Interested</option>
+              <option value="follow_up">Follow-up Needed</option>
+              <option value="confirmed_client">Confirmed Client</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="leads-table" id="leadsTable">
+          <div class="leads-head-row">
+            <span>Lead</span>
+            <span>Business</span>
+            <span>Phone</span>
+            <span>Service Interest</span>
+            <span>Status</span>
+            <span>Follow-up</span>
+            <span></span>
+          </div>
+          <div id="leadsRows"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Add / Edit Lead Modal -->
+  <div class="modal-backdrop" id="leadModalBackdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="leadModalTitle">
+      <div class="modal-header">
+        <h3 id="leadModalTitle">New Lead</h3>
+        <button class="icon-btn" id="closeLeadModal" type="button" aria-label="Close">✕</button>
+      </div>
+      <form id="leadForm" class="modal-form">
+        <input type="hidden" id="leadId" />
+        <div class="form-row">
+          <div class="form-group">
+            <label for="leadName">Name *</label>
+            <input type="text" id="leadName" required />
+          </div>
+          <div class="form-group">
+            <label for="leadBusiness">Business / Company</label>
+            <input type="text" id="leadBusiness" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="leadPhone">Phone *</label>
+            <input type="tel" id="leadPhone" required />
+          </div>
+          <div class="form-group">
+            <label for="leadEmail">Email</label>
+            <input type="email" id="leadEmail" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="leadService">Service Interest</label>
+            <input type="text" id="leadService" placeholder="e.g. Website redesign" />
+          </div>
+          <div class="form-group">
+            <label for="leadSource">Source</label>
+            <input type="text" id="leadSource" placeholder="e.g. Cold call list, referral" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="leadStatus">Status</label>
+            <select id="leadStatus">
+              <option value="not_answered">Not Answered</option>
+              <option value="interested">Interested</option>
+              <option value="follow_up">Follow-up Needed</option>
+              <option value="confirmed_client">Confirmed Client</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="leadFollowUp">Follow-up Date</label>
+            <input type="date" id="leadFollowUp" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="leadNotes">Notes</label>
+          <textarea id="leadNotes" rows="3" placeholder="Anything useful for the next call…"></textarea>
+        </div>
+        <p class="form-error" id="leadFormError" hidden></p>
+        <div class="modal-actions">
+          <button type="button" class="ghost-btn-lg" id="cancelLead">Cancel</button>
+          <button type="submit" class="primary-btn">Save Lead</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Log Call Modal -->
+  <div class="modal-backdrop" id="callModalBackdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="callModalTitle">
+      <div class="modal-header">
+        <h3 id="callModalTitle">Log a Call</h3>
+        <button class="icon-btn" id="closeCallModal" type="button" aria-label="Close">✕</button>
+      </div>
+      <form id="callForm" class="modal-form">
+        <input type="hidden" id="callLeadId" />
+        <p class="modal-subtext" id="callLeadName"></p>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="callOutcome">Call Outcome *</label>
+            <select id="callOutcome" required>
+              <option value="not_answered">Not Answered</option>
+              <option value="interested">Interested</option>
+              <option value="follow_up">Follow-up Needed</option>
+              <option value="confirmed_client">Confirmed Client</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="callNextFollowUp">Next Follow-up</label>
+            <input type="date" id="callNextFollowUp" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="callNotes">Call Notes</label>
+          <textarea id="callNotes" rows="3" placeholder="What was discussed, next steps…"></textarea>
+        </div>
+        <p class="form-error" id="callFormError" hidden></p>
+        <div class="modal-actions">
+          <button type="button" class="ghost-btn-lg" id="cancelCall">Cancel</button>
+          <button type="submit" class="primary-btn">Save Call Log</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>

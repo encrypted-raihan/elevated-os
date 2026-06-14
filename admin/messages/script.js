@@ -24,12 +24,13 @@ import {
   uploadBytes,
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-storage.js";
 
-const LOGIN_ROUTE = "/index/index.html";
+const LOGIN_ROUTE = "../../index/index.html";
 const ROLE_REDIRECTS = {
   admin: "/admin/dashboard/index.html",
-  manager: "/team/dashboard/index.html",
+  manager: "/project-manager/dashboard/index.html",
   developer: "/team/dashboard/index.html",
   team: "/team/dashboard/index.html",
+  cold_caller: "/cold-caller/dashboard/index.html",
   client: "/client/dashboard/index.html",
 };
 

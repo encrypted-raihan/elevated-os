@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elevated Web Solutions Portal — Cold Caller Dashboard</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+      <div class="brand">
+        <div class="brand-mark">
+          <img src="../../assets/elevatedlogo.png" alt="Elevated Web Solutions" class="brand-logo" />
+        </div>
+        <div class="brand-content">
+          <h2>ELEVATED</h2>
+          <p>WEB SOLUTIONS</p>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav-item active" href="../dashboard/index.html" aria-current="page">
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-item" href="../leads/index.html">
+          <span>My Leads</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" type="button">
+          <span aria-hidden="true">↩</span>
+          Sign out
+        </button>
+      </div>
+    </aside>
+
+    <div class="backdrop" id="backdrop" hidden></div>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar" type="button">
+            <span aria-hidden="true">☰</span>
+          </button>
+          <div>
+            <p class="eyebrow">Cold Caller Dashboard</p>
+            <h1>Welcome Back</h1>
+            <p class="subtext">Loading your pipeline…</p>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <a class="new-project-btn" href="../leads/index.html">
+            Open My Leads
+          </a>
+        </div>
+      </header>
+
+      <section class="stats-grid">
+        <div class="stat-card">
+          <p class="stat-title">Leads Assigned</p>
+          <h2 id="statTotalLeads">0</h2>
+          <p class="stat-sub">Total leads in your pipeline</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-title">Calls Today</p>
+          <h2 id="statCallsToday">0</h2>
+          <p class="stat-sub">Calls logged so far today</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-title">Interested Prospects</p>
+          <h2 id="statInterested">0</h2>
+          <p class="stat-sub">Marked as interested</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-title">Confirmed Clients</p>
+          <h2 id="statConfirmed">0</h2>
+          <p class="stat-sub">Converted from your leads</p>
+        </div>
+      </section>
+
+      <section class="bottom-grid">
+        <div class="panel followups-panel">
+          <div class="panel-header">
+            <div>
+              <p class="section-kicker">Action Needed</p>
+              <h3>Follow-ups Due</h3>
+            </div>
+            <a class="text-link" href="../leads/index.html">View all leads →</a>
+          </div>
+          <div class="lead-list" id="followUpList">
+            <p class="empty-state">Loading follow-ups…</p>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <p class="section-kicker">Performance</p>
+          <h3>This Week</h3>
+          <div class="perf-grid">
+            <div class="perf-item">
+              <p class="chart-value" id="statCallsWeek">0</p>
+              <p class="chart-sub">Calls this week</p>
+            </div>
+            <div class="perf-item">
+              <p class="chart-value" id="statConversion">0%</p>
+              <p class="chart-sub">Conversion rate</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel activity-panel">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">Recent Activity</p>
+            <h3>Your Latest Call Logs</h3>
+          </div>
+        </div>
+        <div class="activity-list" id="recentCalls">
+          <p class="empty-state">Loading recent calls…</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>

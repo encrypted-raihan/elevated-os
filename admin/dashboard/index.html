@@ -15,13 +15,8 @@
     <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
       <div class="brand">
         <div class="brand-mark">
-          <img
-            src="../../assets/elevatedlogo.png"
-            alt="Elevated Web Solutions"
-            class="brand-logo"
-          />
+          <img src="../../assets/elevatedlogo.png" alt="Elevated Web Solutions" class="brand-logo" />
         </div>
-
         <div class="brand-content">
           <h2>ELEVATED</h2>
           <p>WEB SOLUTIONS</p>
@@ -32,19 +27,15 @@
         <a class="nav-item active" href="../dashboard/index.html" aria-current="page">
           <span>Dashboard</span>
         </a>
-
         <a class="nav-item" href="../projects/index.html">
           <span>Projects</span>
         </a>
-
         <a class="nav-item" href="../people/index.html">
           <span>People</span>
         </a>
-
         <a class="nav-item" href="../revenue/index.html">
           <span>Revenue</span>
         </a>
-
         <a class="nav-item" href="../messages/index.html">
           <span>Messages</span>
         </a>
@@ -66,7 +57,6 @@
           <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar" type="button">
             <span aria-hidden="true">☰</span>
           </button>
-
           <div>
             <p class="eyebrow">Admin Dashboard</p>
             <h1>Welcome Back</h1>
@@ -78,63 +68,54 @@
           <button class="new-project-btn" id="newProjectBtn" type="button">
             + New Project
           </button>
-
-          <div class="notification-wrap">
-            <button
-              class="icon-btn bell-btn"
-              id="notificationBtn"
-              aria-haspopup="true"
-              aria-expanded="false"
-              aria-label="Notifications"
-              type="button"
-            >
-              <svg
-                class="bell-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
-                <path d="M13.73 21a2 2 0 01-3.46 0"/>
-              </svg>
-
-              <span class="badge" id="notificationCount">0</span>
-            </button>
-
-            <div class="notification-dropdown" id="notificationDropdown" hidden>
-              <div class="dropdown-title">Notifications</div>
-              <div class="dropdown-list" id="notificationList"></div>
-            </div>
-          </div>
         </div>
       </header>
 
+      <!-- Row 1: Project stats -->
       <section class="stats-grid" aria-label="Key performance indicators">
         <article class="stat-card">
           <p class="stat-title">Active Projects</p>
           <h2>—</h2>
           <p class="stat-sub">Loading…</p>
         </article>
-
         <article class="stat-card">
           <p class="stat-title">Revenue This Month</p>
           <h2>—</h2>
           <p class="stat-sub">Loading…</p>
         </article>
-
         <article class="stat-card">
           <p class="stat-title">Pending Payments</p>
           <h2>—</h2>
           <p class="stat-sub">Loading…</p>
         </article>
-
         <article class="stat-card">
           <p class="stat-title">Pending Reviews</p>
           <h2>—</h2>
           <p class="stat-sub">Loading…</p>
+        </article>
+      </section>
+
+      <!-- Row 2: Sales / CRM summary -->
+      <section class="stats-grid" aria-label="Sales pipeline">
+        <article class="stat-card">
+          <p class="stat-title">Total Leads</p>
+          <h2 id="statTotalLeads">—</h2>
+          <p class="stat-sub">All leads in pipeline</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-title">Interested Leads</p>
+          <h2 id="statInterestedLeads">—</h2>
+          <p class="stat-sub">Marked as interested</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-title">Confirmed Clients</p>
+          <h2 id="statConfirmedLeads">—</h2>
+          <p class="stat-sub">Converted from cold calls</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-title">Conversion Rate</p>
+          <h2 id="statConversionRate">—</h2>
+          <p class="stat-sub">Leads → confirmed clients</p>
         </article>
       </section>
 
@@ -144,8 +125,8 @@
             <p class="section-kicker">Projects</p>
             <h3>Recent Projects</h3>
           </div>
+          <a class="text-link" href="../projects/index.html">View all →</a>
         </div>
-
         <div class="projects-table" id="projectsTable" aria-label="Recent projects"></div>
       </section>
 
@@ -156,7 +137,6 @@
             <h3>Recent Messages</h3>
           </div>
         </div>
-
         <div class="message-list" id="messageList" aria-label="Recent messages"></div>
       </section>
 
@@ -167,7 +147,6 @@
             <h3>Recent Activity</h3>
           </div>
         </div>
-
         <div class="activity-list" id="activityList" aria-label="Recent activity"></div>
       </section>
     </main>
