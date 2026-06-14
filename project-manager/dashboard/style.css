@@ -217,3 +217,117 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ===========================
+   PROJECT WORKSPACE MODAL
+=========================== */
+
+[hidden] {
+  display: none !important;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.72);
+  backdrop-filter: blur(6px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 32px;
+
+  z-index: 9999;
+}
+
+.modal {
+  width: min(900px,95vw);
+  max-height: 90vh;
+
+  overflow-y: auto;
+
+  background: #111;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+
+  padding: 24px;
+
+  box-shadow: 0 30px 80px rgba(0,0,0,.45);
+
+  position: relative;
+}
+
+.modal-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  margin-bottom:20px;
+}
+
+.modal-header h3{
+  margin:0;
+}
+
+.modal-subtext{
+  margin-top:6px;
+  color:var(--muted);
+}
+
+#closeWorkspace{
+  width:42px;
+  height:42px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border:none;
+  border-radius:12px;
+
+  background:rgba(255,255,255,.05);
+
+  color:white;
+
+  cursor:pointer;
+
+  transition:.2s;
+}
+
+#closeWorkspace:hover{
+  background:rgba(177,18,38,.18);
+}
+
+.form-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+
+.form-group{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select{
+  background:#181818;
+  border:1px solid var(--border);
+  color:white;
+  border-radius:12px;
+  padding:12px;
+}
+
+.modal-actions{
+  display:flex;
+  gap:12px;
+  margin-top:18px;
+}
+
+.empty-state{
+  color:var(--muted);
+  padding:24px 0;
+}

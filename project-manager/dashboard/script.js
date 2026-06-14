@@ -267,8 +267,17 @@ function openWorkspace(projectId) {
 }
 
 function closeWorkspace() {
+  if (!els.workspaceBackdrop) return;
+
   els.workspaceBackdrop.hidden = true;
   state.activeProjectId = null;
+
+  if (els.noteList) els.noteList.innerHTML = "";
+  if (els.taskList) els.taskList.innerHTML = "";
+  if (els.memberList) els.memberList.innerHTML = "";
+
+  if (els.taskFormError) els.taskFormError.hidden = true;
+  if (els.notesFormError) els.notesFormError.hidden = true;
 }
 
 function switchTab(tab) {
@@ -520,12 +529,144 @@ async function addProjectNote() {
 }
 
 function bindUi() {
+  // ==========================
+  // Logout
+  // ==========================
   if (els.logoutBtn) {
     els.logoutBtn.addEventListener("click", async () => {
       await signOut(auth).catch(() => {});
       window.location.href = LOGIN_ROUTE;
     });
   }
+
+  // ==========================
+  // Mobile Sidebar
+  // ==========================
+  if (els.openSidebarBtn && els.sidebar) {
+    els.openSidebarBtn.addEventListener("click", () => {
+      els.sidebar.classList.add("open");
+
+      if (els.backdrop) {
+        els.backdrop.hidden = false;
+      }
+    });
+  }
+
+  if (els.backdrop && els.sidebar) {
+    els.backdrop.addEventListener("click", () => {
+      els.sidebar.classList.remove("open");
+      els.backdrop.hidden = true;
+    });
+  }
+
+  // ==========================
+  // Open Project Workspace
+  // ==========================
+  if (els.projectsRows) {
+    els.projectsRows.addEventListener("click", (event) => {
+      const openBtn = event.target.closest("[data-open]");
+
+      if (openBtn) {
+        openWorkspace(openBtn.dataset.open);
+      }
+    });
+  }
+
+  // ==========================
+  // Close Workspace
+  // ==========================
+  if (els.closeWorkspace) {
+    els.closeWorkspace.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      closeWorkspace();
+    });
+  }
+
+  // Close when clicking outside modal
+  if (els.workspaceBackdrop) {
+    els.workspaceBackdrop.addEventListener("click", (event) => {
+      if (event.target === els.workspaceBackdrop) {
+        closeWorkspace();
+      }
+    });
+  }
+
+  // ==========================
+  // Workspace Tabs
+  // ==========================
+  els.tabBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      switchTab(btn.dataset.tab);
+    });
+  });
+
+  // ==========================
+  // Team Members
+  // ==========================
+  if (els.addMemberBtn) {
+    els.addMemberBtn.addEventListener("click", addMember);
+  }
+
+  if (els.memberList) {
+    els.memberList.addEventListener("click", (event) => {
+      const removeBtn = event.target.closest("[data-remove-member]");
+
+      if (removeBtn) {
+        removeMember(removeBtn.dataset.removeMember);
+      }
+    });
+  }
+
+  // ==========================
+  // Tasks
+  // ==========================
+  if (els.taskForm) {
+    els.taskForm.addEventListener("submit", handleTaskSubmit);
+  }
+
+  if (els.taskList) {
+    els.taskList.addEventListener("change", (event) => {
+      const select = event.target.closest("[data-task-status]");
+
+      if (select) {
+        updateTaskStatus(select.dataset.taskStatus, select.value);
+      }
+    });
+
+    els.taskList.addEventListener("click", (event) => {
+      const removeBtn = event.target.closest("[data-remove-task]");
+
+      if (removeBtn) {
+        removeTask(removeBtn.dataset.removeTask);
+      }
+    });
+  }
+
+  // ==========================
+  // Project Status & Notes
+  // ==========================
+  if (els.saveStatusBtn) {
+    els.saveStatusBtn.addEventListener("click", saveProjectStatus);
+  }
+
+  if (els.addNoteBtn) {
+    els.addNoteBtn.addEventListener("click", addProjectNote);
+  }
+
+  // ==========================
+  // ESC Key closes Workspace
+  // ==========================
+  document.addEventListener("keydown", (event) => {
+    if (
+      event.key === "Escape" &&
+      els.workspaceBackdrop &&
+      !els.workspaceBackdrop.hidden
+    ) {
+      closeWorkspace();
+    }
+  });
+
 
   if (els.openSidebarBtn && els.sidebar) {
     els.openSidebarBtn.addEventListener("click", () => {
