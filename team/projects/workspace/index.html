@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elevated Web Solutions Portal — Team Project Workspace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+      <div class="brand">
+        <div class="brand-mark">
+          <img
+            src="../../../assets/elevatedlogo.png"
+            alt="Elevated Web Solutions"
+            class="brand-logo"
+          />
+        </div>
+
+        <div class="brand-content">
+          <h2>ELEVATED</h2>
+          <p>WEB SOLUTIONS</p>
+        </div>
+
+        <button class="icon-btn sidebar-close" id="closeSidebar" aria-label="Close sidebar" type="button">
+          <span aria-hidden="true">✕</span>
+        </button>
+      </div>
+
+      
+      <nav class="nav">
+        <a class="nav-item" href="../../dashboard/index.html">
+          <span>Dashboard</span>
+        </a>
+
+        <a class="nav-item active" href="../index.html" aria-current="page">
+          <span>Projects</span>
+        </a>
+
+        <a class="nav-item" href="../../messages/index.html">
+          <span>Messages</span>
+        </a>
+      </nav>
+
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" type="button">
+          <span aria-hidden="true">↩</span>
+          Sign out
+        </button>
+      </div>
+    </aside>
+
+    <div class="backdrop" id="backdrop" hidden></div>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar" type="button">
+            <span aria-hidden="true">☰</span>
+          </button>
+
+          <div class="header-content">
+            <a href="../index.html" class="back-btn">
+              <span>←</span>
+              <span>Back to Projects</span>
+            </a>
+
+            <div class="eyebrow">TEAM WORKSPACE</div>
+            <h1 id="projectName">Loading...</h1>
+            <div class="meta-line" id="projectMeta">—</div>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <button class="btn btn-ghost" id="editBtn" type="button">Edit Project</button>
+          <button class="btn btn-ghost" id="archiveBtn" type="button">Archive Project</button>
+          <button class="btn btn-danger" id="deleteBtn" type="button">Delete Project</button>
+        </div>
+      </header>
+
+      <section class="summary-grid">
+        <article class="summary-card">
+          <div class="summary-label">Progress</div>
+          <div class="summary-value" id="summaryProgress">0%</div>
+          <div class="summary-help">Overall completion</div>
+        </article>
+
+        <article class="summary-card">
+          <div class="summary-label">Current Phase</div>
+          <div class="summary-value" id="summaryPhase">—</div>
+          <div class="summary-help">Active project stage</div>
+        </article>
+
+        <article class="summary-card">
+          <div class="summary-label">Due Date</div>
+          <div class="summary-value" id="summaryDueDate">—</div>
+          <div class="summary-help">Delivery deadline</div>
+        </article>
+      </section>
+
+      <section class="workspace-card">
+        <div class="tabs" id="tabs">
+          <button class="tab active" data-tab="overview" type="button">Overview</button>
+          <button class="tab" data-tab="timeline" type="button">Timeline</button>
+          <button class="tab" data-tab="files" type="button">Files</button>
+          <button class="tab" data-tab="updates" type="button">Updates</button>
+          <button class="tab" data-tab="team" type="button">Team</button>
+        </div>
+
+        <div class="tab-panel active" id="overview">
+          <div class="section-head">
+            <div>
+              <div class="section-kicker">OVERVIEW</div>
+              <h2>Project Details</h2>
+            </div>
+          </div>
+
+          <div class="details-grid">
+            <div class="detail-card">
+              <div class="detail-label">Project Name</div>
+              <div class="detail-value" id="detailName">—</div>
+            </div>
+
+            <div class="detail-card">
+              <div class="detail-label">Description</div>
+              <div class="detail-value detail-text" id="detailDescription">—</div>
+            </div>
+
+            <div class="detail-card">
+              <div class="detail-label">Client</div>
+              <div class="detail-value" id="detailClient">—</div>
+            </div>
+
+            <div class="detail-card">
+              <div class="detail-label">Project ID</div>
+              <div class="detail-value" id="detailId">—</div>
+            </div>
+
+            <div class="detail-card">
+              <div class="detail-label">Status</div>
+              <div class="detail-value" id="detailStatus">—</div>
+            </div>
+
+            <div class="detail-card">
+              <div class="detail-label">Start Date</div>
+              <div class="detail-value" id="detailStartDate">—</div>
+            </div>
+
+            <div class="detail-card">
+              <div class="detail-label">Due Date</div>
+              <div class="detail-value" id="detailDueDate">—</div>
+            </div>
+
+            <div class="detail-card">
+              <div class="detail-label">Current Phase</div>
+              <div class="detail-value" id="detailPhase">—</div>
+            </div>
+
+            <div class="detail-card" id="detailBudgetCard">
+              <div class="detail-label">Budget</div>
+              <div class="detail-value" id="detailBudget">—</div>
+            </div>
+          </div>
+
+          <div class="subsection">
+            <div class="section-head small">
+              <div>
+                <div class="section-kicker">TEAM</div>
+                <h3>Assigned Team Members</h3>
+              </div>
+            </div>
+            <div class="chips" id="overviewTeam"></div>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="timeline">
+          <div class="section-head">
+            <div>
+              <div class="section-kicker">TIMELINE</div>
+              <h2>Project Stages</h2>
+            </div>
+            <div class="phase-controls">
+              <label for="phaseSelect">Change phase</label>
+              <select id="phaseSelect"></select>
+            </div>
+          </div>
+
+          <div class="timeline" id="timelineList"></div>
+        </div>
+
+        <div class="tab-panel" id="files">
+          <div class="section-head">
+            <div>
+              <div class="section-kicker">FILES</div>
+              <h2>Project Files</h2>
+            </div>
+            <button class="btn btn-primary" id="uploadBtn" type="button">Upload File</button>
+            <input type="file" id="fileInput" hidden />
+          </div>
+
+          <div class="file-grid" id="fileGrid"></div>
+        </div>
+
+        <div class="tab-panel" id="updates">
+          <div class="section-head">
+            <div>
+              <div class="section-kicker">UPDATES</div>
+              <h2>Project Log</h2>
+            </div>
+            <button class="btn btn-primary" id="addUpdateBtn" type="button">Add Update</button>
+          </div>
+
+          <div class="updates-list" id="updatesList"></div>
+        </div>
+
+        <div class="tab-panel" id="team">
+          <div class="section-head">
+            <div>
+              <div class="section-kicker">TEAM</div>
+              <h2>Assigned Members</h2>
+            </div>
+            <button class="btn btn-primary" id="addMemberBtn" type="button">Add Member</button>
+          </div>
+
+          <div class="team-list" id="teamList"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+
+  <div class="modal" id="deleteModal">
+    <h3 id="deleteTitle">Delete Project?</h3>
+    <p id="deleteText">This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelDelete" type="button">Cancel</button>
+      <button class="btn btn-danger" id="confirmDelete" type="button">Delete</button>
+    </div>
+  </div>
+
+  <div class="modal" id="promptModal">
+    <h3 id="promptTitle">New Item</h3>
+    <p id="promptText">Enter details below.</p>
+    <input type="text" id="promptInput" class="modal-input" />
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelPrompt" type="button">Cancel</button>
+      <button class="btn btn-primary" id="confirmPrompt" type="button">Save</button>
+    </div>
+  </div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>

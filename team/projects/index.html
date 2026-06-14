@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elevated Web Solutions Portal — Team Projects</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+      <div class="brand">
+        <div class="brand-mark">
+          <img
+            src="../../assets/elevatedlogo.png"
+            alt="Elevated Web Solutions"
+            class="brand-logo"
+          />
+        </div>
+
+        <div class="brand-content">
+          <h2>ELEVATED</h2>
+          <p>WEB SOLUTIONS</p>
+        </div>
+
+        <button class="icon-btn sidebar-close" id="closeSidebar" aria-label="Close sidebar" type="button">
+          <span aria-hidden="true">✕</span>
+        </button>
+      </div>
+
+      
+      <nav class="nav">
+        <a class="nav-item" href="../dashboard/index.html">
+          <span>Dashboard</span>
+        </a>
+
+        <a class="nav-item active" href="../projects/index.html" aria-current="page">
+          <span>Projects</span>
+        </a>
+
+        <a class="nav-item" href="../messages/index.html">
+          <span>Messages</span>
+        </a>
+      </nav>
+
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" type="button">
+          <span aria-hidden="true">↩</span>
+          Sign out
+        </button>
+      </div>
+    </aside>
+
+    <div class="backdrop" id="backdrop" hidden></div>
+
+    <main class="main">
+      <header class="page-header">
+        <div class="topbar-left">
+          <button class="icon-btn menu-btn" id="openSidebar" aria-label="Open sidebar" type="button">
+            <span aria-hidden="true">☰</span>
+          </button>
+
+          <div>
+            <div class="eyebrow">TEAM DASHBOARD</div>
+            <h1>Projects</h1>
+            <p>View only projects assigned to you and your team.</p>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button class="primary-btn" id="openProjectModalBtn" type="button">+ New Project</button>
+
+          <div class="notification-wrap">
+            <button
+              class="icon-btn"
+              type="button"
+              id="notificationBtn"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-label="Notifications"
+            >
+              <span class="bell">🔔</span>
+              <span class="badge" id="notificationCount">0</span>
+            </button>
+
+            <div class="notification-dropdown hidden" id="notificationDropdown">
+              <div class="dropdown-title">Notifications</div>
+              <div class="dropdown-list" id="notificationList"></div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="search-panel">
+        <label class="search-field" aria-label="Search projects">
+          <span class="search-icon">⌕</span>
+          <input
+            id="searchInput"
+            type="search"
+            placeholder="Search projects..."
+            autocomplete="off"
+          />
+        </label>
+        <div class="search-hint">Search by project name, client name, manager, or project ID</div>
+      </section>
+
+      <section class="filter-panel" aria-label="Project filters">
+        <button class="filter-pill active" data-filter="all" type="button">All</button>
+        <button class="filter-pill" data-filter="active" type="button">Active</button>
+        <button class="filter-pill" data-filter="completed" type="button">Completed</button>
+        <button class="filter-pill" data-filter="onhold" type="button">On Hold</button>
+        <button class="filter-pill" data-filter="planning" type="button">Planning</button>
+        <button class="filter-pill" data-filter="development" type="button">Development</button>
+        <button class="filter-pill" data-filter="testing" type="button">Testing</button>
+      </section>
+
+      <section class="projects-section">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">PROJECTS</div>
+            <h2>Project Library</h2>
+          </div>
+          <div class="results-count" id="resultsCount"></div>
+        </div>
+
+        <div class="empty-state" id="emptyState" hidden>
+          <div class="empty-icon">◌</div>
+          <h3>No projects yet.</h3>
+          <p>Create your first project to get started.</p>
+          <button class="primary-btn" id="emptyNewProjectBtn" type="button">+ New Project</button>
+        </div>
+
+        <div class="projects-grid" id="projectsGrid" aria-live="polite"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Create Project Modal -->
+  <div class="modal-backdrop" id="projectModal" aria-hidden="true">
+    <div class="modal modal-large" role="dialog" aria-modal="true" aria-labelledby="projectModalTitle">
+      <div class="modal-head">
+        <div>
+          <div class="section-kicker">PROJECTS</div>
+          <h3 id="projectModalTitle">Create Project</h3>
+        </div>
+        <button class="modal-close" type="button" data-close="projectModal">✕</button>
+      </div>
+
+      <form id="projectForm" class="modal-body">
+        <div class="form-grid">
+          <div class="form-group span-2">
+            <label for="projectName">Project Name</label>
+            <input id="projectName" name="projectName" type="text" placeholder="Luxury Villa Website" required />
+          </div>
+
+          <div class="form-group span-2">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="4" placeholder="Brief project scope and objectives..." required></textarea>
+          </div>
+
+          <div class="form-group">
+            <div class="label-row">
+              <label for="clientSelect">Client</label>
+              <button class="text-btn" type="button" id="openClientModalBtn">+ New Client</button>
+            </div>
+            <select id="clientSelect" name="clientSelect" required></select>
+          </div>
+
+          <div class="form-group">
+            <label for="projectManagerSelect">Project Manager</label>
+            <select id="projectManagerSelect" name="projectManagerSelect" required></select>
+          </div>
+
+          <div class="form-group" id="budgetGroup">
+            <label for="budget">Budget (₹)</label>
+            <input id="budget" name="budget" type="number" min="0" step="1000" placeholder="250000" required />
+          </div>
+
+          <div class="form-group">
+            <label for="startDate">Start Date</label>
+            <input id="startDate" name="startDate" type="date" required />
+          </div>
+
+          <div class="form-group">
+            <label for="dueDate">Due Date</label>
+            <input id="dueDate" name="dueDate" type="date" required />
+          </div>
+
+          <div class="form-group span-2">
+            <label>Assign Team <span style="opacity:.7">(optional)</span></label>
+            <div class="team-list" id="teamList"></div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="secondary-btn" type="button" data-close="projectModal">Cancel</button>
+          <button class="primary-btn" type="submit">Create Project</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create Client Modal -->
+  <div class="modal-backdrop" id="clientModal" aria-hidden="true">
+    <div class="modal modal-small" role="dialog" aria-modal="true" aria-labelledby="clientModalTitle">
+      <div class="modal-head">
+        <div>
+          <div class="section-kicker">CLIENTS</div>
+          <h3 id="clientModalTitle">New Client</h3>
+        </div>
+        <button class="modal-close" type="button" data-close="clientModal">✕</button>
+      </div>
+
+      <form id="clientForm" class="modal-body">
+        <div class="form-grid single">
+          <div class="form-group">
+            <label for="clientName">Client Name</label>
+            <input id="clientName" type="text" placeholder="ABC Builders" required />
+          </div>
+
+          <div class="form-group">
+            <label for="clientEmail">Email</label>
+            <input id="clientEmail" type="email" placeholder="contact@example.com" required />
+          </div>
+
+          <div class="form-group">
+            <label for="clientPassword">Temporary Password</label>
+            <input id="clientPassword" type="text" placeholder="Temp@1234" required />
+          </div>
+
+          <div class="form-group">
+            <label for="clientCompany">Company / Brand</label>
+            <input id="clientCompany" type="text" placeholder="ABC Builders Pvt Ltd" />
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="secondary-btn" type="button" data-close="clientModal">Cancel</button>
+          <button class="primary-btn" type="submit">Create Client</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>

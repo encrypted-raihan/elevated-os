@@ -22,7 +22,7 @@ const ROLE_REDIRECTS = {
 };
 
 const ACTIVE_PROJECT_STATUSES = new Set(["planning", "active", "review", "paused"]);
-const TEAM_ROLES = new Set(["manager", "developer"]);
+const TEAM_ROLES = new Set(["manager", "developer", "team"]);
 
 const currencyFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
@@ -869,7 +869,7 @@ function openProjectWorkspace(projectId) {
     // Ignore session storage failures.
   }
 
-  window.location.href = `../project-workspace/index.html?projectId=${encodeURIComponent(projectId)}`;
+  window.location.href = `../projects/workspace/index.html?projectId=${encodeURIComponent(projectId)}`;
 }
 
 function openPrimaryWorkspace() {
