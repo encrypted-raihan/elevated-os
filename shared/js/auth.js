@@ -38,7 +38,7 @@ async function logout() {
 
     await db.auth.signOut();
 
-    window.location.href = "/index/index.html";
+    window.location.href = "..../../index/index.html";
 
 }
 
@@ -86,7 +86,7 @@ async function redirectByRole() {
 
     if (!profile) {
 
-        window.location.href = "/index/index.html";
+        window.location.href = "..../../index/index.html";
         return;
 
     }
@@ -117,7 +117,7 @@ async function requireAuth() {
 
     if (!user) {
 
-        window.location.href = "/index/index.html";
+        window.location.href = "..../../index/index.html";
 
     }
 

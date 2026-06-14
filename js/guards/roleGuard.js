@@ -5,6 +5,8 @@ import {
   getDoc
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
+import { homeFor, normalizeRole } from "../utils/permissions.js";
+
 export async function requireRole(uid, allowedRoles = []) {
 
   const snap = await getDoc(
@@ -16,26 +18,10 @@ export async function requireRole(uid, allowedRoles = []) {
   }
 
   const profile = snap.data();
+  const role = normalizeRole(profile.role);
 
-  if (!allowedRoles.includes(profile.role)) {
-
-    switch (profile.role) {
-
-      case "admin":
-        window.location.href =
-          "/admin/dashboard/index.html";
-        break;
-
-      case "client":
-        window.location.href =
-          "/client/dashboard/index.html";
-        break;
-
-      default:
-        window.location.href =
-          "/team/dashboard/index.html";
-    }
-
+  if (!allowedRoles.map(normalizeRole).includes(role)) {
+    window.location.href = homeFor(role);
     return null;
   }
 
